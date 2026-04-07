@@ -53,10 +53,10 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }) {
           </div>
         </div>
 
-        {/* Delivery notice */}
+        {/* Delivery notice - only for 60% promo */}
         <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded p-1.5 mb-3">
           <Clock className="w-3 h-3 text-amber-600 flex-shrink-0" />
-          <span className="text-xs text-amber-700 font-medium">Entrega em até 30 dias</span>
+          <span className="text-xs text-amber-700 font-medium">⚠️ Promoção: entrega em 30 dias</span>
         </div>
 
         {/* Add to cart */}
