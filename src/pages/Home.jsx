@@ -51,27 +51,46 @@ export default function Home() {
       alert("O checkout só funciona a partir do app publicado. Por favor, abra o app em uma nova aba.");
       return;
     }
+    
+    // Validar carrinho
+    if (!cart || cart.length === 0) {
+      toast({ title: "Carrinho vazio", description: "Adicione produtos antes de finalizar.", variant: "destructive" });
+      return;
+    }
+
     setIsCheckingOut(true);
     try {
-      const items = cart.map((item) => ({
-        name: item.name,
-        image: item.image,
-        discountedPrice: getDiscountedPrice(item),
-        qty: item.qty,
-      }));
-      const response = await base44.functions.invoke("createCheckout", {
+      const items = cart.map((item) => {
+        const discountedPrice = getDiscountedPrice(item);
+        return {
+          name: item.name || "Produto sem nome",
+          image: item.image || "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=400&fit=crop",
+          discountedPrice: Math.max(discountedPrice, 0.01), // Mínimo 0.01
+          qty: Math.max(item.qty || 1, 1),
+        };
+      });
+
+      const payload = {
         items,
         successUrl: `${window.location.origin}/sucesso`,
         cancelUrl: `${window.location.origin}/`,
-      });
-      if (response.data?.url) {
+      };
+
+      const response = await base44.functions.invoke("createCheckout", payload);
+      
+      if (response?.data?.url) {
         window.location.href = response.data.url;
       } else {
-        throw new Error("URL de checkout não recebida");
+        throw new Error(response?.data?.error || "URL de checkout não recebida");
       }
     } catch (error) {
-      console.error(error);
-      toast({ title: "Erro no checkout", description: "Não foi possível processar. Tente novamente.", variant: "destructive" });
+      console.error("Erro no checkout:", error);
+      const errorMsg = error?.response?.data?.error || error.message || "Erro desconhecido";
+      toast({ 
+        title: "Erro no checkout", 
+        description: errorMsg, 
+        variant: "destructive" 
+      });
     } finally {
       setIsCheckingOut(false);
     }

@@ -2,53 +2,95 @@ import Stripe from "npm:stripe@14.21.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"));
 
-Deno.serve(async (req) => {
-  try {
-    const { items, successUrl, cancelUrl } = await req.json();
+// Validação e sanitização de items
+const validateLineItems = (items) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error("Items deve ser um array não vazio");
+  }
 
-    if (!items || items.length === 0) {
-      return Response.json({ error: "Carrinho vazio" }, { status: 400 });
+  return items.map((item) => {
+    if (!item.name || typeof item.name !== "string") {
+      throw new Error("Campo 'name' é obrigatório e deve ser string");
+    }
+    if (!item.image || typeof item.image !== "string") {
+      throw new Error("Campo 'image' é obrigatório e deve ser string");
+    }
+    if (typeof item.discountedPrice !== "number" || item.discountedPrice <= 0) {
+      throw new Error("Campo 'discountedPrice' deve ser um número maior que 0");
+    }
+    if (typeof item.qty !== "number" || item.qty < 1) {
+      throw new Error("Campo 'qty' deve ser um número >= 1");
     }
 
-    const lineItems = items.map((item) => ({
+    const unitAmount = Math.round(item.discountedPrice * 100);
+    if (unitAmount < 50) {
+      throw new Error("Valor mínimo por item é R$ 0.50");
+    }
+
+    return {
       price_data: {
         currency: "brl",
         product_data: {
-          name: item.name,
+          name: item.name.substring(0, 255),
           images: [item.image],
-          description: `⚠️ Entrega em até 30 dias corridos após confirmação do pagamento. 60% de desconto aplicado.`,
+          description: "Produto com desconto especial",
         },
-        unit_amount: Math.round(item.discountedPrice * 100),
+        unit_amount: unitAmount,
       },
       quantity: item.qty,
-    }));
+    };
+  });
+};
+
+Deno.serve(async (req) => {
+  try {
+    if (req.method !== "POST") {
+      return Response.json({ error: "Método não permitido" }, { status: 405 });
+    }
+
+    const body = await req.json();
+    const { items, successUrl, cancelUrl } = body;
+
+    // Validar items
+    const lineItems = validateLineItems(items);
+
+    // Validar URLs
+    const originUrl = req.headers.get("origin") || "https://example.com";
+    const finalSuccessUrl = successUrl || `${originUrl}/sucesso?session_id={CHECKOUT_SESSION_ID}`;
+    const finalCancelUrl = cancelUrl || originUrl;
+
+    console.log("Creating checkout session with", lineItems.length, "items");
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      success_url: successUrl || `${req.headers.get("origin")}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${req.headers.get("origin")}/`,
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
       locale: "pt-BR",
       metadata: {
-        base44_app_id: Deno.env.get("BASE44_APP_ID"),
-        delivery_notice: "Entrega em ate 30 dias corridos",
-      },
-      payment_intent_data: {
-        metadata: {
-          base44_app_id: Deno.env.get("BASE44_APP_ID"),
-        },
-      },
-      custom_text: {
-        submit: {
-          message: "⚠️ Atenção: Esta é uma promoção especial. Os produtos serão entregues em até 30 dias corridos após a confirmação do pagamento.",
-        },
+        base44_app_id: Deno.env.get("BASE44_APP_ID") || "unknown",
       },
     });
 
-    return Response.json({ url: session.url, sessionId: session.id });
+    console.log("Checkout session created:", session.id);
+    return Response.json({ url: session.url, sessionId: session.id }, { status: 200 });
+
   } catch (error) {
-    console.error("Checkout error:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Checkout error:", errorMessage);
+    console.error("Error details:", error);
+
+    if (errorMessage.includes("Invalid request")) {
+      return Response.json(
+        { error: "Dados inválidos. Verifique os valores dos produtos." },
+        { status: 400 }
+      );
+    }
+
+    return Response.json(
+      { error: "Erro ao processar checkout. Tente novamente." },
+      { status: 500 }
+    );
   }
 });
