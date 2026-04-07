@@ -10,6 +10,7 @@ import ProductCard from "../components/store/ProductCard";
 import CartSidebar from "../components/store/CartSidebar";
 import ProductModal from "../components/store/ProductModal";
 import { products, getDiscountedPrice } from "../data/products";
+import Footer from "../components/store/Footer";
 
 export default function Home() {
   const [cart, setCart] = useState([]);
@@ -143,19 +144,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-white mt-12 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="text-3xl font-black mb-2">
-            <span className="text-white">CASAS</span><span className="text-red-400">BAHIAS</span>
-          </div>
-          <p className="text-blue-200 text-sm mb-3">Os melhores produtos com 60% de desconto</p>
-          <div className="flex flex-wrap justify-center gap-6 text-xs text-blue-300 mb-3">
-            <span>💳 Crédito</span><span>💳 Débito</span><span>📱 PIX</span><span>📄 Boleto</span>
-          </div>
-          <p className="text-xs text-blue-500 mt-2">© 2025 Casas Bahias. Todos os direitos reservados.</p>
-        </div>
-      </footer>
+      <Footer />
 
       {cartOpen && (
         <CartSidebar cart={cart} onClose={() => setCartOpen(false)} onRemove={removeFromCart} onCheckout={handleCheckout} isCheckingOut={isCheckingOut} />
