@@ -63,14 +63,7 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }) {
           </div>
         )}
 
-        {/* Buy now */}
-        <button
-          onClick={() => onAddToCart(product)}
-          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors mt-auto"
-        >
-          <ShoppingCart className="w-4 h-4" />
-          Comprar Agora
-        </button>
+
       </div>
     </div>
   );

@@ -33,18 +33,9 @@ export default function Home() {
     return matchCat && matchSearch;
   });
 
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { ...product, qty: 1 }];
-    });
-    toast({ title: "Produto adicionado!", description: product.name, duration: 1500 });
-    
-    // Trigger checkout immediately
-    setTimeout(() => {
-      setCartOpen(true);
-    }, 100);
+  const handleProductClick = (product) => {
+    setCart([{ ...product, qty: 1 }]);
+    window.location.href = "/checkout";
   };
 
   const removeFromCart = (productId) => {
@@ -155,12 +146,13 @@ export default function Home() {
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-                onViewProduct={setSelectedProduct}
-              />
+              <div key={product.id} onClick={() => handleProductClick(product)} className="cursor-pointer">
+                <ProductCard
+                  product={product}
+                  onAddToCart={() => {}}
+                  onViewProduct={() => {}}
+                />
+              </div>
             ))}
           </div>
         ) : (
