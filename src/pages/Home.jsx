@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Header from "../components/store/Header";
 import HeroBanner from "../components/store/HeroBanner";
 import CategoryIcons from "../components/store/CategoryIcons";
+import FeaturedCarousel from "../components/store/FeaturedCarousel";
 import CategoryBar from "../components/store/CategoryBar";
 import ProductCard from "../components/store/ProductCard";
 import CartSidebar from "../components/store/CartSidebar";
@@ -93,6 +94,11 @@ export default function Home() {
         {/* Hero Banner */}
         {!searchQuery && (
           <HeroBanner onCategorySelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }} />
+        )}
+
+        {/* Featured products carousel (like Casas Bahia highlights row) */}
+        {!searchQuery && (
+          <FeaturedCarousel onCategorySelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }} />
         )}
 
         {/* Promo strip */}
