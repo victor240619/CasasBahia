@@ -18,7 +18,7 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
         <Link to="/" className="flex-shrink-0 mr-2">
           <div className="text-2xl font-black tracking-tight leading-none">
             <span className="text-blue-700">CASAS</span>
-            <span className="text-red-600">GUIAS</span>
+            <span className="text-red-600">BAHIAS</span>
           </div>
         </Link>
 

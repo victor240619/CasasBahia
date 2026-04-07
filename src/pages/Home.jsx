@@ -102,7 +102,7 @@ export default function Home() {
             <span>💳 Débito</span>
             <span>📱 PIX</span>
             <span>📄 Boleto</span>
-            <span className="text-yellow-300 font-semibold">⚠️ Entrega em 30 dias</span>
+            <span className="text-yellow-300 font-semibold">📦 Frete grátis</span>
           </div>
         </div>
 
@@ -147,14 +147,13 @@ export default function Home() {
       <footer className="bg-blue-900 text-white mt-12 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="text-3xl font-black mb-2">
-            <span className="text-white">CASAS</span><span className="text-red-400">GUIAS</span>
+            <span className="text-white">CASAS</span><span className="text-red-400">BAHIAS</span>
           </div>
           <p className="text-blue-200 text-sm mb-3">Os melhores produtos com 60% de desconto</p>
           <div className="flex flex-wrap justify-center gap-6 text-xs text-blue-300 mb-3">
             <span>💳 Crédito</span><span>💳 Débito</span><span>📱 PIX</span><span>📄 Boleto</span>
           </div>
-          <p className="text-xs text-blue-400">⚠️ Promoção especial: entrega em até 30 dias após confirmação do pagamento</p>
-          <p className="text-xs text-blue-500 mt-2">© 2025 Asas Guias. Todos os direitos reservados.</p>
+          <p className="text-xs text-blue-500 mt-2">© 2025 Casas Bahias. Todos os direitos reservados.</p>
         </div>
       </footer>
 
