@@ -12,6 +12,8 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
+      {/* Red line on TOP */}
+      <div className="h-1 bg-red-600" />
       {/* Main header row */}
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
         {/* Logo - exatamente como Casas Bahia */}
@@ -23,8 +25,14 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
         </Link>
 
         {/* Accessibility icon */}
-        <button className="hidden md:flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 text-gray-500 hover:border-blue-500 flex-shrink-0 text-xs font-bold">
-          ♿
+        <button className="hidden md:flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="28" height="28">
+            <circle cx="30" cy="30" r="29" fill="#0057B8" />
+            <circle cx="30" cy="14" r="5" fill="white" />
+            <path d="M30 22 c-7 0-12 4-12 4 l2 3 c0 0 4-3 10-3 s10 3 10 3 l2-3 c0 0-5-4-12-4z" fill="white" />
+            <path d="M22 28 l-4 14 h4 l4-10 4 10 h4 l-4-14 z" fill="white" />
+            <path d="M18 29 l2 7 c2 5 5 8 10 8 s8-3 10-8 l2-7" fill="none" stroke="white" strokeWidth="2.5" />
+          </svg>
         </button>
 
         {/* Search bar */}
@@ -80,8 +88,7 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
         </button>
       </div>
 
-      {/* Red thin line separator */}
-      <div className="h-0.5 bg-red-600" />
+
 
       {/* Navigation bar */}
       <nav className="border-b border-gray-200 bg-white">
