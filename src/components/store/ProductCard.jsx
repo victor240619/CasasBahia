@@ -3,14 +3,14 @@ import { Star, ShoppingCart, Clock } from "lucide-react";
 import { getDiscountedPrice } from "../../data/products";
 
 export default function ProductCard({ product, onAddToCart, onViewProduct }) {
-  const discountedPrice = getDiscountedPrice(product.originalPrice);
+  const discountedPrice = getDiscountedPrice(product);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 group overflow-hidden">
       {/* Discount badge */}
       <div className="relative">
         <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-          -60%
+          -{product.discount}%
         </div>
         <img
           src={product.image}

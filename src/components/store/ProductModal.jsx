@@ -4,7 +4,7 @@ import { getDiscountedPrice } from "../../data/products";
 
 export default function ProductModal({ product, onClose, onAddToCart }) {
   if (!product) return null;
-  const discountedPrice = getDiscountedPrice(product.originalPrice);
+  const discountedPrice = getDiscountedPrice(product);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -18,7 +18,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
           <div className="md:w-1/2">
             <div className="relative">
               <div className="absolute top-3 left-3 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-full z-10">
-                -60% OFF
+                -{product.discount}% OFF
               </div>
               <img src={product.image} alt={product.name} className="w-full h-72 object-cover rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none" />
             </div>
@@ -39,7 +39,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
             <div className="bg-blue-50 rounded-xl p-4 mb-4">
               <p className="text-sm text-gray-500 line-through">De: R$ {product.originalPrice.toFixed(2).replace(".", ",")}</p>
               <p className="text-3xl font-black text-blue-700">R$ {discountedPrice.toFixed(2).replace(".", ",")}</p>
-              <p className="text-sm text-green-600 font-semibold">60% de desconto no PIX, Débito ou Crédito</p>
+              <p className="text-sm text-green-600 font-semibold">{product.discount}% de desconto no PIX, Débito ou Crédito</p>
               <p className="text-xs text-gray-500 mt-1">ou em até 12x no cartão de crédito</p>
             </div>
 
