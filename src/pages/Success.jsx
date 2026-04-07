@@ -24,7 +24,7 @@ export default function Success() {
         </div>
 
         <div className="text-3xl font-black mb-2">
-          <span className="text-blue-700">ASAS</span>
+          <span className="text-blue-700">CASAS</span>
           <span className="text-red-600"> GUIAS</span>
         </div>
         <p className="text-sm text-gray-400 mb-6">Obrigado por comprar conosco!</p>

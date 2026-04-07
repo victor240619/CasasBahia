@@ -13,7 +13,7 @@ const banners = [
     },
     right: {
       bg: "from-blue-800 to-blue-900",
-      title: "ASAS GUIAS",
+      title: "CASAS GUIAS",
       subtitle: "QUANDO CAI",
       highlight: "O PAGAMENTO",
     },
@@ -45,7 +45,7 @@ const banners = [
     },
     right: {
       bg: "from-indigo-800 to-indigo-900",
-      title: "ASAS GUIAS",
+      title: "CASAS GUIAS",
       subtitle: "ENTREGA EM ATÉ",
       highlight: "30 DIAS",
     },

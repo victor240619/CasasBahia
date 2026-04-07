@@ -15,8 +15,9 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }) {
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer bg-gray-100"
           onClick={() => onViewProduct(product)}
+          onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop"; }}
         />
       </div>
 
@@ -53,16 +54,18 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }) {
           </div>
         </div>
 
-        {/* Delivery notice - only for 60% promo */}
-        <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded p-1.5 mb-3">
-          <Clock className="w-3 h-3 text-amber-600 flex-shrink-0" />
-          <span className="text-xs text-amber-700 font-medium">⚠️ Promoção: entrega em 30 dias</span>
-        </div>
+        {/* Delivery notice - only for promo30dias products */}
+        {product.promo30dias && (
+          <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded p-1.5 mb-3">
+            <Clock className="w-3 h-3 text-amber-600 flex-shrink-0" />
+            <span className="text-xs text-amber-700 font-medium">⚠️ Promoção: entrega em 30 dias</span>
+          </div>
+        )}
 
         {/* Add to cart */}
         <button
           onClick={() => onAddToCart(product)}
-          className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+          className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors mt-auto"
         >
           <ShoppingCart className="w-4 h-4" />
           Adicionar ao Carrinho

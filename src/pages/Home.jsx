@@ -147,7 +147,7 @@ export default function Home() {
       <footer className="bg-blue-900 text-white mt-12 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="text-3xl font-black mb-2">
-            <span className="text-white">ASAS</span><span className="text-red-400">GUIAS</span>
+            <span className="text-white">CASAS</span><span className="text-red-400">GUIAS</span>
           </div>
           <p className="text-blue-200 text-sm mb-3">Os melhores produtos com 60% de desconto</p>
           <div className="flex flex-wrap justify-center gap-6 text-xs text-blue-300 mb-3">
