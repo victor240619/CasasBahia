@@ -3,7 +3,7 @@ import { X, Trash2, ShoppingBag, AlertCircle } from "lucide-react";
 import { getDiscountedPrice } from "../../data/products";
 
 export default function CartSidebar({ cart, onClose, onRemove, onCheckout, isCheckingOut }) {
-  const total = cart.reduce((sum, item) => sum + getDiscountedPrice(item.originalPrice) * item.qty, 0);
+  const total = cart.reduce((sum, item) => sum + getDiscountedPrice(item) * item.qty, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -47,7 +47,7 @@ export default function CartSidebar({ cart, onClose, onRemove, onCheckout, isChe
                   <div className="mt-1">
                     <span className="text-xs text-gray-400 line-through">R$ {item.originalPrice.toFixed(2).replace(".", ",")}</span>
                     <p className="text-blue-700 font-bold">
-                      R$ {getDiscountedPrice(item.originalPrice).toFixed(2).replace(".", ",")}
+                      R$ {getDiscountedPrice(item).toFixed(2).replace(".", ",")}
                     </p>
                   </div>
                   <p className="text-xs text-gray-500">Qtd: {item.qty}</p>
