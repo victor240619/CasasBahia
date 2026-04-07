@@ -4,43 +4,40 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       {/* FORMAS DE PAGAMENTO */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 border-b border-gray-100">
         <h3 className="text-blue-700 font-bold text-sm mb-4">FORMAS DE PAGAMENTOS</h3>
 
         <div className="flex flex-wrap gap-10">
           {/* Cartões do Grupo */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Cartões do Grupo</p>
+            <p className="text-xs text-gray-500 mb-2 font-semibold">Cartões do Grupo</p>
             <div className="flex flex-col items-center gap-1">
-              <img
-                src="https://www.casasbahia-imagens.com.br/App_Themes/CasasBahia/favicon.ico"
-                alt="Casas Bahia"
-                className="w-10 h-10 object-contain border border-gray-200 rounded"
-                onError={(e) => { e.target.style.display = "none"; }}
-              />
+              <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white text-[8px] font-bold text-center">CASAS<br/>BAHIA</span>
+              </div>
               <span className="text-[10px] text-gray-500">Casas Bahia</span>
             </div>
           </div>
 
           {/* Outras formas */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Outras formas</p>
+            <p className="text-xs text-gray-500 mb-2 font-semibold">Outras formas</p>
             <div className="flex items-end gap-4">
               <div className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">BQ</span>
+                  <span className="text-white text-[8px] font-bold">BQ</span>
                 </div>
                 <span className="text-[10px] text-gray-500">BanQi</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">CD</span>
+                  <span className="text-white text-[8px] font-bold">CD</span>
                 </div>
                 <span className="text-[10px] text-gray-500">Carnê Digital</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">PIX</span>
+                  <span className="text-white text-[8px] font-bold">PIX</span>
                 </div>
                 <span className="text-[10px] text-gray-500">Pix</span>
               </div>
@@ -49,7 +46,7 @@ export default function Footer() {
 
           {/* Crédito */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Crédito</p>
+            <p className="text-xs text-gray-500 mb-2 font-semibold">Crédito</p>
             <div className="flex items-center gap-2 flex-wrap">
               {/* VISA */}
               <div className="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">VISA</div>
@@ -75,10 +72,52 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-gray-100" />
+      {/* CENTRAL DE VENDAS + ATENDIMENTO */}
+      <div className="max-w-7xl mx-auto px-4 py-5 border-b border-gray-100">
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          {/* Central de Vendas */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-1">CENTRAL DE VENDAS</h4>
+            <p className="text-xs text-gray-600">Compre pelo Whatsapp</p>
+          </div>
+
+          {/* Central de Atendimento */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-1">CENTRAL DE ATENDIMENTO</h4>
+            <p className="text-xs text-gray-600">4003-4336 Fale pelo Whatsapp</p>
+          </div>
+
+          {/* Para RJ */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-1">PARA RJ E REGIÃO</h4>
+            <p className="text-xs text-gray-600">0800-200-4336</p>
+          </div>
+        </div>
+      </div>
+
+      {/* PRODUTOS MAIS BUSCADOS */}
+      <div className="max-w-7xl mx-auto px-4 py-5 border-b border-gray-100">
+        <h3 className="text-blue-700 font-bold text-sm mb-3">PRODUTOS MAIS BUSCADOS</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+          {[
+            "Air fryer", "Ar condicionado", "Armário de cozinha", "Bicicleta", "Cama", "Celular",
+            "Celular Motorola", "Celular Samsung", "Colchão", "Computador", "Cooktop", "Fogão 4 bocas",
+            "Fralda", "Geladeira", "Guarda roupa", "iPhone", "iPhone 11", "iPhone 12", "iPhone 13",
+            "iPhone 14", "iPhone 15", "iPhone 15 Pro", "iPhone 16", "Liquidificador", "Máquina de lavar",
+            "Microondas", "Notebook", "Pneu", "Pneu aro 13", "Rack", "Smart TV", "Smartphone",
+            "Smartwatch", "Sofá", "Tanquinho", "Tênis", "TV", "Ventilador", "Xiaomi", "PS5", "Xbox",
+            "S25", "Cafeteira", "Galaxy S24", "TV 50 4K", "TV 32 polegadas", "Umidificador de ar",
+            "Bicicleta ergométrica", "Ar condicionado portátil", "Tablet"
+          ].map((item, idx) => (
+            <a key={idx} href="#" className="text-xs text-blue-700 hover:underline">
+              {item}
+            </a>
+          ))}
+        </div>
+      </div>
 
       {/* REDES SOCIAIS + APP + SELOS */}
-      <div className="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-6 border-b border-gray-100">
         {/* Redes Sociais */}
         <div>
           <h3 className="text-blue-700 font-bold text-sm mb-3">ACOMPANHE NAS REDES SOCIAIS</h3>
@@ -93,7 +132,7 @@ export default function Footer() {
             </a>
             {/* Instagram */}
             <a href="#" className="w-9 h-9 border border-gray-300 rounded-lg flex items-center justify-center text-pink-600 hover:bg-gray-50">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="none" stroke="currentColor" strokeWidth="2"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="currentColor" strokeWidth="2"/></svg>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.688.267 1.339.716 1.856 1.233.517.517.966 1.168 1.233 1.856.248.638.415 1.363.465 2.428.05 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.217 1.79-.465 2.428-.267.688-.716 1.339-1.233 1.856-.517.517-1.168.966-1.856 1.233-.638.248-1.363.415-2.428.465-1.066.05-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.217-2.428-.465-.688-.267-1.339-.716-1.856-1.233-.517-.517-.966-1.168-1.233-1.856-.248-.638-.415-1.363-.465-2.428-.05-1.066-.06-1.405-.06-4.122 0-2.717.01-3.056.06-4.122.05-1.065.217-1.79.465-2.428.267-.688.716-1.339 1.233-1.856.517-.517 1.168-.966 1.856-1.233.638-.248 1.363-.415 2.428-.465 1.066-.05 1.405-.06 4.122-.06zM12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
             </a>
             {/* YouTube */}
             <a href="#" className="w-9 h-9 border border-gray-300 rounded-lg flex items-center justify-center text-red-600 hover:bg-gray-50">
@@ -129,15 +168,70 @@ export default function Footer() {
 
         {/* Selos */}
         <div className="flex items-center gap-3">
-          <div className="border border-gray-200 rounded-lg p-2 text-center w-24">
+          <div className="border border-gray-200 rounded-lg p-2 text-center w-20">
             <div className="text-[8px] text-gray-400 font-semibold">CONFI</div>
             <div className="text-[10px] font-bold text-blue-700 leading-tight">LOJA CONFIÁVEL</div>
             <div className="text-[8px] text-gray-500 leading-tight">GRUPO CASAS BAHIA</div>
-            <div className="text-[8px] text-blue-500">05-04-2026</div>
           </div>
-          <div className="text-center">
+          <div className="text-center border border-green-600 rounded-lg p-2">
             <div className="text-[10px] text-green-700 font-bold">consumidor</div>
-            <div className="text-[10px] text-green-600">gov.br</div>
+            <div className="text-[8px] text-green-600">gov.br</div>
+          </div>
+        </div>
+      </div>
+
+      {/* LINKS INFORMATIVOS */}
+      <div className="max-w-7xl mx-auto px-4 py-5 border-b border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-xs">
+          {/* Meus Pedidos */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-2">MEUS PEDIDOS</h4>
+            <ul className="space-y-1 text-gray-600">
+              <li><a href="#" className="hover:text-blue-700">Acompanhe seus pedidos</a></li>
+              <li><a href="#" className="hover:text-blue-700">Editar cadastro</a></li>
+            </ul>
+          </div>
+
+          {/* Marketplace */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-2">MARKETPLACE</h4>
+            <ul className="space-y-1 text-gray-600">
+              <li><a href="#" className="hover:text-blue-700">Cadastro</a></li>
+              <li><a href="#" className="hover:text-blue-700">Venda seus produtos</a></li>
+              <li><a href="#" className="hover:text-blue-700">Serviços</a></li>
+            </ul>
+          </div>
+
+          {/* Casas Bahia */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-2">CASAS BAHIA</h4>
+            <ul className="space-y-1 text-gray-600">
+              <li><a href="#" className="hover:text-blue-700">Quem somos</a></li>
+              <li><a href="#" className="hover:text-blue-700">Serviços</a></li>
+              <li><a href="#" className="hover:text-blue-700">Lista de Presentes</a></li>
+              <li><a href="#" className="hover:text-blue-700">Trabalhe conosco</a></li>
+              <li><a href="#" className="hover:text-blue-700">Blog Casas Bahia</a></li>
+              <li><a href="#" className="hover:text-blue-700">Black Friday</a></li>
+            </ul>
+          </div>
+
+          {/* Ajuda */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-2">AJUDA</h4>
+            <ul className="space-y-1 text-gray-600">
+              <li><a href="#" className="hover:text-blue-700">Mapa do Site</a></li>
+              <li><a href="#" className="hover:text-blue-700">Atendimento em libras</a></li>
+              <li><a href="#" className="hover:text-blue-700">Prazos e locais de entrega</a></li>
+              <li><a href="#" className="hover:text-blue-700">Política de Troca e Devolução</a></li>
+              <li><a href="#" className="hover:text-blue-700">Termos e Condições de Uso</a></li>
+            </ul>
+          </div>
+
+          {/* Cartão */}
+          <div>
+            <h4 className="font-bold text-blue-700 text-xs mb-2">CARTÃO CASAS BAHIA</h4>
+            <p className="text-gray-600 mb-2">Parcele suas compras em até 30x</p>
+            <a href="#" className="text-blue-700 hover:underline font-semibold">Peça já o seu!</a>
           </div>
         </div>
       </div>
@@ -145,10 +239,10 @@ export default function Footer() {
       {/* Bottom bar azul */}
       <div className="bg-blue-700 text-white px-4 py-4">
         <div className="max-w-7xl mx-auto">
-          <p className="text-xs text-blue-100">
+          <p className="text-xs text-blue-100 mb-1">
             Preços e condições exclusivos para o site www.casasbahia.com.br, podendo sofrer alterações sem prévia notificação.
           </p>
-          <p className="text-xs font-bold mt-1">
+          <p className="text-xs font-bold">
             Grupo Casas Bahia S.A. | Rua Florida, 1970 | São Paulo – SP | CEP: 04565-001 | CNPJ: 33.041.260/0652-90 | Inscrição Estadual: 133.091.229.115
           </p>
         </div>

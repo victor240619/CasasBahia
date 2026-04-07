@@ -39,7 +39,12 @@ export default function Home() {
       if (existing) return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { ...product, qty: 1 }];
     });
-    toast({ title: "Produto adicionado!", description: product.name, duration: 2000 });
+    toast({ title: "Produto adicionado!", description: product.name, duration: 1500 });
+    
+    // Trigger checkout immediately
+    setTimeout(() => {
+      setCartOpen(true);
+    }, 100);
   };
 
   const removeFromCart = (productId) => {
