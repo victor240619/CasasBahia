@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShoppingCart, Search, User, Heart, MapPin, Menu } from "lucide-react";
+import { ShoppingCart, Search, User, Heart, MapPin, Menu, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Header({ cartCount, onSearch, onCartClick }) {
@@ -13,85 +13,100 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       {/* Main header row */}
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-        {/* Logo */}
-        <Link to="/" className="flex-shrink-0 mr-2">
-          <div className="text-2xl font-black tracking-tight leading-none">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
+        {/* Logo - exatamente como Casas Bahia */}
+        <Link to="/" className="flex-shrink-0 mr-3">
+          <div className="text-2xl font-black tracking-tight leading-none select-none">
             <span className="text-blue-700">CASAS</span>
-            <span className="text-red-600">BAHIAS</span>
+            <span className="text-red-600">BAHIA</span>
           </div>
         </Link>
 
+        {/* Accessibility icon */}
+        <button className="hidden md:flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 text-gray-500 hover:border-blue-500 flex-shrink-0 text-xs font-bold">
+          ♿
+        </button>
+
         {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+        <form onSubmit={handleSearch} className="flex-1 max-w-2xl mx-2">
           <div className="flex border border-gray-300 rounded-md overflow-hidden hover:border-blue-500 transition-colors">
             <input
               type="text"
               placeholder="O que você tá procurando?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-2 text-sm outline-none bg-white"
+              className="flex-1 px-4 py-2 text-sm outline-none bg-white text-gray-700 placeholder-gray-400"
             />
-            <button type="submit" className="bg-white px-4 py-2 text-gray-500 hover:text-blue-700 border-l border-gray-200 transition-colors">
+            <button
+              type="submit"
+              className="bg-white px-4 py-2 text-gray-400 hover:text-blue-700 border-l border-gray-200 transition-colors"
+            >
               <Search className="w-5 h-5" />
             </button>
           </div>
         </form>
 
-        {/* Right icons */}
-        <div className="flex items-center gap-4 ml-auto flex-shrink-0">
-          {/* Delivery location */}
-          <div className="hidden lg:flex flex-col text-xs text-gray-500 leading-tight cursor-pointer hover:text-blue-700">
-            <span className="text-gray-400">Entregar em:</span>
-            <div className="flex items-center gap-1 font-semibold text-gray-700">
-              <MapPin className="w-3 h-3" />
-              <span>Goiânia, GO</span>
-            </div>
+        {/* Delivery location */}
+        <div className="hidden lg:flex items-center gap-2 text-xs text-gray-600 flex-shrink-0">
+          <Truck className="w-5 h-5 text-blue-700 flex-shrink-0" />
+          <div className="leading-tight">
+            <div className="text-gray-400 text-xs">Entregar em:</div>
+            <div className="font-bold text-gray-700 text-xs">74474-378 - Goiânia</div>
           </div>
-
-          {/* Account */}
-          <button className="hidden md:flex items-center gap-2 text-gray-600 hover:text-blue-700 border border-gray-200 hover:border-blue-400 rounded-full px-3 py-1.5 text-sm transition-colors">
-            <User className="w-4 h-4" />
-            <span>Acesse sua conta</span>
-          </button>
-
-          {/* Wishlist */}
-          <button className="hidden md:block text-gray-500 hover:text-red-500 transition-colors">
-            <Heart className="w-6 h-6" />
-          </button>
-
-          {/* Cart */}
-          <button onClick={onCartClick} className="relative text-gray-600 hover:text-blue-700 transition-colors">
-            <ShoppingCart className="w-6 h-6" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                {cartCount}
-              </span>
-            )}
-          </button>
         </div>
+
+        {/* Account */}
+        <button className="hidden md:flex items-center gap-1.5 text-gray-600 hover:text-blue-700 border border-gray-200 hover:border-blue-400 rounded-full px-3 py-1.5 text-xs transition-colors flex-shrink-0">
+          <User className="w-4 h-4" />
+          <span>Acesse sua conta</span>
+        </button>
+
+        {/* Wishlist */}
+        <button className="hidden md:block text-gray-500 hover:text-red-500 transition-colors flex-shrink-0">
+          <Heart className="w-5 h-5" />
+        </button>
+
+        {/* Cart */}
+        <button
+          onClick={onCartClick}
+          className="relative text-gray-600 hover:text-blue-700 transition-colors flex-shrink-0"
+        >
+          <ShoppingCart className="w-6 h-6" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+              {cartCount}
+            </span>
+          )}
+        </button>
       </div>
 
+      {/* Red thin line separator */}
+      <div className="h-0.5 bg-red-600" />
+
       {/* Navigation bar */}
-      <nav className="border-t border-gray-200">
+      <nav className="border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-6 py-2 text-sm text-gray-700 overflow-x-auto whitespace-nowrap">
+          <div className="flex items-center gap-5 py-2 text-sm text-gray-700 overflow-x-auto whitespace-nowrap">
+            {/* Left nav items */}
             <button className="flex items-center gap-1.5 font-semibold hover:text-blue-700 flex-shrink-0">
               <Menu className="w-4 h-4" />
               <span>Departamentos</span>
             </button>
-            <Link to="/?cat=smartphones" className="hover:text-blue-700 flex-shrink-0">Telefonia</Link>
-            <Link to="/?cat=eletrodomesticos" className="hover:text-blue-700 flex-shrink-0">Eletrodomésticos</Link>
-            <Link to="/?cat=tvs" className="hover:text-blue-700 flex-shrink-0">Tvs e Vídeo</Link>
-            <Link to="/?cat=moveis" className="hover:text-blue-700 flex-shrink-0">Móveis</Link>
-            <Link to="/?cat=ar" className="hover:text-blue-700 flex-shrink-0">Eletroporáteis</Link>
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0">Cupom</span>
-            <div className="hidden md:flex items-center gap-6 ml-6 border-l border-gray-200 pl-6">
-              <span className="hover:text-blue-700 cursor-pointer flex-shrink-0">Carnê Digital</span>
-              <span className="hover:text-blue-700 cursor-pointer flex-shrink-0">Cartão Asas Guias</span>
-              <span className="hover:text-blue-700 cursor-pointer flex-shrink-0">Serviços e Proteções</span>
-              <span className="hover:text-blue-700 cursor-pointer flex-shrink-0">Soluções Financeiras</span>
-            </div>
+            <Link to="/?cat=smartphones" className="hover:text-blue-700 flex-shrink-0 text-sm">Telefonia</Link>
+            <Link to="/?cat=eletrodomesticos" className="hover:text-blue-700 flex-shrink-0 text-sm">Eletrodomésticos</Link>
+            <Link to="/?cat=tvs" className="hover:text-blue-700 flex-shrink-0 text-sm">Tvs e Vídeo</Link>
+            <Link to="/?cat=moveis" className="hover:text-blue-700 flex-shrink-0 text-sm">Móveis</Link>
+            <Link to="/?cat=ar" className="hover:text-blue-700 flex-shrink-0 text-sm">Eletroporáteis</Link>
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded font-semibold flex-shrink-0">Cupom</span>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Right nav items */}
+            <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Carnê Digital</span>
+            <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Cartão Casas Bahia</span>
+            <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Serviços e Proteções</span>
+            <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Soluções Financeiras</span>
           </div>
         </div>
       </nav>
