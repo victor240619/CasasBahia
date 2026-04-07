@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "../components/store/Header";
 import HeroBanner from "../components/store/HeroBanner";
+import CategoryIcons from "../components/store/CategoryIcons";
 import CategoryBar from "../components/store/CategoryBar";
 import ProductCard from "../components/store/ProductCard";
 import CartSidebar from "../components/store/CartSidebar";
@@ -18,7 +19,6 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  // Read category from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
@@ -34,9 +34,7 @@ export default function Home() {
   const addToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      }
+      if (existing) return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
       return [...prev, { ...product, qty: 1 }];
     });
     toast({ title: "Produto adicionado!", description: product.name, duration: 2000 });
@@ -47,12 +45,10 @@ export default function Home() {
   };
 
   const handleCheckout = async () => {
-    // Check if in iframe
     if (window.self !== window.top) {
       alert("O checkout só funciona a partir do app publicado. Por favor, abra o app em uma nova aba.");
       return;
     }
-
     setIsCheckingOut(true);
     try {
       const items = cart.map((item) => ({
@@ -61,13 +57,11 @@ export default function Home() {
         discountedPrice: getDiscountedPrice(item.originalPrice),
         qty: item.qty,
       }));
-
       const response = await base44.functions.invoke("createCheckout", {
         items,
         successUrl: `${window.location.origin}/sucesso`,
         cancelUrl: `${window.location.origin}/`,
       });
-
       if (response.data?.url) {
         window.location.href = response.data.url;
       } else {
@@ -75,18 +69,14 @@ export default function Home() {
       }
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Erro no checkout",
-        description: "Não foi possível processar o pagamento. Tente novamente.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro no checkout", description: "Não foi possível processar. Tente novamente.", variant: "destructive" });
     } finally {
       setIsCheckingOut(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Header
         cartCount={cart.reduce((s, i) => s + i.qty, 0)}
         onSearch={(q) => { setSearchQuery(q); setSelectedCategory(null); }}
@@ -94,32 +84,38 @@ export default function Home() {
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Hero */}
+        {/* Category icons row (like Casas Bahia) */}
+        {!searchQuery && (
+          <CategoryIcons onSelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }} />
+        )}
+
+        {/* Hero Banner */}
         {!searchQuery && (
           <HeroBanner onCategorySelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }} />
         )}
 
-        {/* Promo Banner */}
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span className="text-2xl font-black">🔥 PROMOÇÃO ESPECIAL — 60% OFF</span>
-            <p className="text-sm text-red-100 mt-1">Válido no Crédito, Débito, PIX ou Boleto</p>
-          </div>
-          <div className="bg-white text-red-600 px-4 py-2 rounded-lg font-bold text-sm">
-            ⏰ Entrega em até 30 dias
+        {/* Promo strip */}
+        <div className="bg-blue-700 text-white rounded-lg px-4 py-2 mb-5 flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="font-bold">🔥 PROMOÇÃO ESPECIAL — 60% OFF em todos os produtos</span>
+          <div className="flex items-center gap-4 text-xs text-blue-100">
+            <span>💳 Crédito</span>
+            <span>💳 Débito</span>
+            <span>📱 PIX</span>
+            <span>📄 Boleto</span>
+            <span className="text-yellow-300 font-semibold">⚠️ Entrega em 30 dias</span>
           </div>
         </div>
 
-        {/* Categories */}
+        {/* Category filter tabs */}
         <CategoryBar
           selectedCategory={selectedCategory}
           onSelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }}
         />
 
-        {/* Results info */}
+        {/* Results header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-800">
-            {searchQuery ? `Resultados para "${searchQuery}"` : selectedCategory ? `Categoria selecionada` : "Todos os Produtos"}
+          <h2 className="text-lg font-bold text-gray-800">
+            {searchQuery ? `Resultados para "${searchQuery}"` : selectedCategory ? "Produtos da categoria" : "Todos os Produtos"}
           </h2>
           <span className="text-sm text-gray-500">{filteredProducts.length} produtos</span>
         </div>
@@ -140,10 +136,7 @@ export default function Home() {
           <div className="text-center py-20 text-gray-400">
             <p className="text-5xl mb-4">🔍</p>
             <p className="text-xl font-semibold">Nenhum produto encontrado</p>
-            <button
-              onClick={() => { setSearchQuery(""); setSelectedCategory(null); }}
-              className="mt-4 text-blue-700 hover:underline"
-            >
+            <button onClick={() => { setSearchQuery(""); setSelectedCategory(null); }} className="mt-4 text-blue-700 hover:underline">
               Ver todos os produtos
             </button>
           </div>
@@ -154,41 +147,23 @@ export default function Home() {
       <footer className="bg-blue-900 text-white mt-12 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="text-3xl font-black mb-2">
-            <span className="text-white">ASAS</span>
-            <span className="text-red-400"> GUIAS</span>
+            <span className="text-white">ASAS</span><span className="text-red-400">GUIAS</span>
           </div>
-          <p className="text-blue-200 text-sm mb-4">Os melhores produtos com 60% de desconto</p>
-          <div className="flex flex-wrap justify-center gap-6 text-xs text-blue-300 mb-4">
-            <span>💳 Crédito</span>
-            <span>💳 Débito</span>
-            <span>📱 PIX</span>
-            <span>📄 Boleto</span>
+          <p className="text-blue-200 text-sm mb-3">Os melhores produtos com 60% de desconto</p>
+          <div className="flex flex-wrap justify-center gap-6 text-xs text-blue-300 mb-3">
+            <span>💳 Crédito</span><span>💳 Débito</span><span>📱 PIX</span><span>📄 Boleto</span>
           </div>
           <p className="text-xs text-blue-400">⚠️ Promoção especial: entrega em até 30 dias após confirmação do pagamento</p>
-          <p className="text-xs text-blue-500 mt-2">© 2024 Asas Guias. Todos os direitos reservados.</p>
+          <p className="text-xs text-blue-500 mt-2">© 2025 Asas Guias. Todos os direitos reservados.</p>
         </div>
       </footer>
 
-      {/* Cart */}
       {cartOpen && (
-        <CartSidebar
-          cart={cart}
-          onClose={() => setCartOpen(false)}
-          onRemove={removeFromCart}
-          onCheckout={handleCheckout}
-          isCheckingOut={isCheckingOut}
-        />
+        <CartSidebar cart={cart} onClose={() => setCartOpen(false)} onRemove={removeFromCart} onCheckout={handleCheckout} isCheckingOut={isCheckingOut} />
       )}
-
-      {/* Product Modal */}
       {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={(p) => { addToCart(p); setSelectedProduct(null); }}
-        />
+        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onAddToCart={(p) => { addToCart(p); setSelectedProduct(null); }} />
       )}
-
       <Toaster />
     </div>
   );
