@@ -55,7 +55,7 @@ export default function Home() {
       const items = cart.map((item) => ({
         name: item.name,
         image: item.image,
-        discountedPrice: getDiscountedPrice(item),
+        discountedPrice: getDiscountedPrice(item.originalPrice),
         qty: item.qty,
       }));
       const response = await base44.functions.invoke("createCheckout", {
@@ -97,7 +97,7 @@ export default function Home() {
 
         {/* Promo strip */}
         <div className="bg-blue-700 text-white rounded-lg px-4 py-2 mb-5 flex flex-wrap items-center justify-between gap-2 text-sm">
-          <span className="font-bold">🔥 PROMOÇÃO ESPECIAL — Descontos de até 20% em produtos selecionados</span>
+          <span className="font-bold">🔥 PROMOÇÃO ESPECIAL — 60% OFF em todos os produtos</span>
           <div className="flex items-center gap-4 text-xs text-blue-100">
             <span>💳 Crédito</span>
             <span>💳 Débito</span>
