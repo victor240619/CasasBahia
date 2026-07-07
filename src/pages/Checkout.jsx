@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Heart, Share2, Star, MapPin, CreditCard, Truck, Shield } from "lucide-react";
+import { Heart, Share2, Star, CreditCard, Truck, Shield } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "@/components/ui/use-toast";
 import Header from "../components/store/Header";
 import Footer from "../components/store/Footer";
+import { getDiscountedPrice } from "../data/products";
+import { createRetailOrder } from "../payments/gateway";
+import { useShopState } from "../store/shopStore";
 
 export default function Checkout() {
+  const [shop, setShop] = useShopState();
   const [cart, setCart] = useState(() => {
     try {
       const stored = localStorage.getItem("checkout_product");
@@ -16,6 +20,14 @@ export default function Checkout() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [cep, setCep] = useState("74474-378");
+  const [customer, setCustomer] = useState({ name: "", email: "" });
+  const [card, setCard] = useState({
+    holderName: "",
+    number: "",
+    expMonth: "",
+    expYear: "",
+    cvc: "",
+  });
 
   useEffect(() => {
     const product = JSON.parse(sessionStorage.getItem("checkout_product") || "null");
@@ -41,7 +53,45 @@ export default function Checkout() {
   }
 
   const product = cart[0];
-  const total = (product.discountedPrice || product.originalPrice * 0.4) * product.qty;
+  const total = getDiscountedPrice(product) * product.qty;
+  const isOwnGateway = shop.gatewaySettings.mode === "own";
+
+  const handleOwnGatewayCheckout = () => {
+    const { order, payment } = createRetailOrder({
+      mode: "own",
+      cart,
+      products: shop.products,
+      customer,
+      card,
+      gatewaySettings: shop.gatewaySettings,
+    });
+
+    setShop((draft) => ({
+      ...draft,
+      orders: [order, ...draft.orders],
+      payments: [payment, ...draft.payments],
+      products: draft.products.map((item) => {
+        const orderItem = order.items.find((candidate) => String(candidate.productId) === String(item.id));
+        if (!orderItem || !Number.isFinite(item.stock)) {
+          return item;
+        }
+        return { ...item, stock: Math.max(0, item.stock - orderItem.quantity) };
+      }),
+      audit: [
+        {
+          id: `audit-${Date.now()}`,
+          at: new Date().toISOString(),
+          actor: "checkout",
+          action: `Pedido ${order.id} aprovado no gateway proprio.`,
+        },
+        ...draft.audit,
+      ],
+    }));
+
+    sessionStorage.removeItem("checkout_product");
+    localStorage.removeItem("checkout_product");
+    window.location.href = `/sucesso?order=${order.id}&gateway=own`;
+  };
 
   const handleCheckout = async () => {
     if (window.self !== window.top) {
@@ -51,10 +101,15 @@ export default function Checkout() {
 
     setIsProcessing(true);
     try {
+      if (isOwnGateway) {
+        handleOwnGatewayCheckout();
+        return;
+      }
+
       const items = [{
         name: product.name,
         image: product.image,
-        discountedPrice: Math.max(product.discountedPrice || product.originalPrice * 0.4, 0.01),
+        discountedPrice: Math.max(getDiscountedPrice(product), 0.01),
         qty: product.qty,
       }];
 
@@ -167,6 +222,9 @@ export default function Checkout() {
           <div className="col-span-1">
             {/* Price Card */}
             <div className="bg-white rounded-lg p-6 mb-4 sticky top-4">
+              <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
+                {isOwnGateway ? "Gateway proprio seguro em sandbox" : "Checkout Stripe via Base44"}
+              </div>
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-sm text-gray-400 line-through">
@@ -180,6 +238,63 @@ export default function Checkout() {
                   No PIX com 15% de desconto
                 </p>
               </div>
+
+              {isOwnGateway && (
+                <div className="space-y-3 mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-xs text-gray-600">
+                    Pagamento tokenizado. Nao armazenamos numero completo do cartao nem CVV.
+                  </p>
+                  <input
+                    value={customer.name}
+                    onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="Nome do comprador"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={customer.email}
+                    onChange={(event) => setCustomer((current) => ({ ...current, email: event.target.value }))}
+                    placeholder="email@cliente.com"
+                    type="email"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={card.holderName}
+                    onChange={(event) => setCard((current) => ({ ...current, holderName: event.target.value }))}
+                    placeholder="Nome impresso no cartao"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={card.number}
+                    onChange={(event) => setCard((current) => ({ ...current, number: event.target.value }))}
+                    placeholder="4242 4242 4242 4242"
+                    inputMode="numeric"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input
+                      value={card.expMonth}
+                      onChange={(event) => setCard((current) => ({ ...current, expMonth: event.target.value }))}
+                      placeholder="MM"
+                      inputMode="numeric"
+                      className="border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                    <input
+                      value={card.expYear}
+                      onChange={(event) => setCard((current) => ({ ...current, expYear: event.target.value }))}
+                      placeholder="AAAA"
+                      inputMode="numeric"
+                      className="border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                    <input
+                      value={card.cvc}
+                      onChange={(event) => setCard((current) => ({ ...current, cvc: event.target.value }))}
+                      placeholder="CVV"
+                      inputMode="numeric"
+                      className="border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={handleCheckout}

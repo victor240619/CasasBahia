@@ -5,6 +5,17 @@ import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
 
+const hasBase44Runtime = () => {
+  return Boolean(
+    appParams.appId &&
+    appParams.appId !== 'null' &&
+    appParams.appId !== 'undefined' &&
+    appParams.appBaseUrl &&
+    appParams.appBaseUrl !== 'null' &&
+    appParams.appBaseUrl !== 'undefined'
+  );
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,6 +30,14 @@ export const AuthProvider = ({ children }) => {
 
   const checkAppState = async () => {
     try {
+      if (!hasBase44Runtime()) {
+        setAppPublicSettings(null);
+        setIsLoadingPublicSettings(false);
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        return;
+      }
+
       setIsLoadingPublicSettings(true);
       setAuthError(null);
       

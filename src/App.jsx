@@ -9,6 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Home from './pages/Home';
 import Checkout from './pages/Checkout';
 import Success from './pages/Success';
+import MasterAdmin from './pages/MasterAdmin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -40,6 +41,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Home />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/sucesso" element={<Success />} />
+      <Route path="/master" element={<MasterAdmin />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

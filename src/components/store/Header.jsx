@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShoppingCart, Search, User, Heart, MapPin, Menu, Truck } from "lucide-react";
+import { ShoppingCart, Search, User, Heart, Menu, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Header({ cartCount, onSearch, onCartClick }) {
@@ -114,6 +114,7 @@ export default function Header({ cartCount, onSearch, onCartClick }) {
             <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Cartão Casas Bahia</span>
             <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Serviços e Proteções</span>
             <span className="hover:text-blue-700 cursor-pointer flex-shrink-0 text-sm hidden md:block">Soluções Financeiras</span>
+            <Link to="/master" className="hover:text-blue-700 flex-shrink-0 text-sm font-semibold hidden md:block">Master Admin</Link>
           </div>
         </div>
       </nav>

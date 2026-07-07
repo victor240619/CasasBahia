@@ -10,10 +10,13 @@ import CategoryBar from "../components/store/CategoryBar";
 import ProductCard from "../components/store/ProductCard";
 import CartSidebar from "../components/store/CartSidebar";
 import ProductModal from "../components/store/ProductModal";
-import { products, getDiscountedPrice } from "../data/products";
+import SubscriptionPanel from "../components/store/SubscriptionPanel";
+import { getDiscountedPrice } from "../data/products";
 import Footer from "../components/store/Footer";
+import { useShopState } from "../store/shopStore";
 
 export default function Home() {
+  const [shop] = useShopState();
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -27,6 +30,8 @@ export default function Home() {
     if (cat) setSelectedCategory(cat);
   }, []);
 
+  const products = shop.products.filter((product) => product.active ?? true);
+
   const filteredProducts = products.filter((p) => {
     const matchCat = !selectedCategory || p.category === selectedCategory;
     const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -34,8 +39,22 @@ export default function Home() {
   });
 
   const handleProductClick = (product) => {
-    setCart([{ ...product, qty: 1 }]);
+    const checkoutProduct = { ...product, qty: 1 };
+    setCart([checkoutProduct]);
+    sessionStorage.setItem("checkout_product", JSON.stringify(checkoutProduct));
     window.location.href = "/checkout";
+  };
+
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+        );
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
   };
 
   const removeFromCart = (productId) => {
@@ -115,6 +134,8 @@ export default function Home() {
         {!searchQuery && (
           <FeaturedCarousel onCategorySelect={(cat) => { setSelectedCategory(cat); setSearchQuery(""); }} />
         )}
+
+        {!searchQuery && <SubscriptionPanel />}
 
         {/* Promo strip */}
         <div className="bg-blue-700 text-white rounded-lg px-4 py-2 mb-5 flex flex-wrap items-center justify-between gap-2 text-sm">

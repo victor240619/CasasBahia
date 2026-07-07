@@ -1,5 +1,5 @@
 import React from "react";
-import { Star, ShoppingCart, Clock } from "lucide-react";
+import { Star, Clock } from "lucide-react";
 import { getDiscountedPrice, getDiscountPercent } from "../../data/products";
 
 export default function ProductCard({ product, onAddToCart, onViewProduct }) {
