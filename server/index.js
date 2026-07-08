@@ -160,6 +160,86 @@ function getPendingStripeSession(state, sessionId) {
   );
 }
 
+function getObjectId(value) {
+  return typeof value === "string" ? value : value?.id || null;
+}
+
+function upsertGatewayCard(state, cardRecord) {
+  const current = Array.isArray(state.gatewayCards) ? state.gatewayCards : [];
+  const matchKey =
+    cardRecord.paymentMethodId ||
+    cardRecord.token ||
+    `${cardRecord.customerEmail}:${cardRecord.brand}:${cardRecord.last4}:${cardRecord.expMonth}:${cardRecord.expYear}`;
+  const existing = current.find((card) => {
+    const key =
+      card.paymentMethodId ||
+      card.token ||
+      `${card.customerEmail}:${card.brand}:${card.last4}:${card.expMonth}:${card.expYear}`;
+    return key === matchKey;
+  });
+  const nextCard = {
+    ...(existing || {}),
+    ...cardRecord,
+    id: existing?.id || cardRecord.id,
+    createdAt: existing?.createdAt || cardRecord.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return [nextCard, ...current.filter((card) => card.id !== nextCard.id)].slice(0, 500);
+}
+
+function getCardFromPaymentMethod(paymentMethod) {
+  if (!paymentMethod || typeof paymentMethod !== "object") {
+    return null;
+  }
+
+  return paymentMethod.card || null;
+}
+
+function extractGatewayCard(session, customer, gatewayMode, now) {
+  const paymentIntent = typeof session.payment_intent === "object" ? session.payment_intent : null;
+  const subscription = typeof session.subscription === "object" ? session.subscription : null;
+  const latestInvoice = typeof subscription?.latest_invoice === "object" ? subscription.latest_invoice : null;
+  const invoicePaymentIntent =
+    typeof latestInvoice?.payment_intent === "object" ? latestInvoice.payment_intent : null;
+  const paymentMethod =
+    (typeof paymentIntent?.payment_method === "object" && paymentIntent.payment_method) ||
+    (typeof subscription?.default_payment_method === "object" && subscription.default_payment_method) ||
+    (typeof invoicePaymentIntent?.payment_method === "object" && invoicePaymentIntent.payment_method) ||
+    null;
+  const latestCharge = typeof paymentIntent?.latest_charge === "object" ? paymentIntent.latest_charge : null;
+  const chargeCard = latestCharge?.payment_method_details?.card || null;
+  const card = getCardFromPaymentMethod(paymentMethod) || chargeCard;
+  const paymentMethodId = getObjectId(paymentMethod) || getObjectId(paymentIntent?.payment_method);
+
+  if (!card && !paymentMethodId) {
+    return null;
+  }
+
+  return {
+    id: createId("card"),
+    gatewayMode,
+    provider: "stripe",
+    status: "active",
+    customerName: customer.name,
+    customerEmail: customer.email,
+    token: paymentMethodId || getObjectId(session.setup_intent) || getObjectId(session.payment_intent),
+    paymentMethodId,
+    brand: card?.brand || "",
+    last4: card?.last4 || "",
+    expMonth: card?.exp_month || null,
+    expYear: card?.exp_year || null,
+    funding: card?.funding || "",
+    country: card?.country || "",
+    wallet: card?.wallet?.type || "",
+    sourceSessionId: session.id,
+    paymentIntentId: getObjectId(session.payment_intent),
+    subscriptionId: getObjectId(session.subscription),
+    livemode: Boolean(session.livemode),
+    createdAt: now.toISOString(),
+  };
+}
+
 function centsFromLineItems(session) {
   const data = session?.line_items?.data;
   if (!Array.isArray(data) || data.length === 0) {
@@ -194,7 +274,15 @@ function getStripeErrorMessage(data, fallback) {
   return message;
 }
 
-async function createStripeCheckout({ mode, items, plan, customer, successUrl, cancelUrl }) {
+async function createStripeCheckout({
+  mode,
+  items,
+  plan,
+  customer,
+  successUrl,
+  cancelUrl,
+  gatewayMode = "stripe",
+}) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
     return {
@@ -224,12 +312,16 @@ async function createStripeCheckout({ mode, items, plan, customer, successUrl, c
   const body = new URLSearchParams();
   body.set("mode", mode);
   body.set("payment_method_types[0]", "card");
-  body.set("success_url", appendCheckoutSessionId(successUrl, { gateway: "stripe", mode }));
+  body.set("success_url", appendCheckoutSessionId(successUrl, { gateway: gatewayMode, mode }));
   body.set("cancel_url", cancelUrl || "http://127.0.0.1:8787/");
   body.set("locale", "pt-BR");
-  body.set("client_reference_id", createId(mode === "subscription" ? "stripe-sub" : "stripe-order"));
+  body.set(
+    "client_reference_id",
+    createId(mode === "subscription" ? `${gatewayMode}-sub` : `${gatewayMode}-order`)
+  );
   body.set("metadata[app]", "casas-bahia-store");
   body.set("metadata[mode]", mode);
+  body.set("metadata[gateway_mode]", gatewayMode);
 
   if (safeCustomer.email) {
     body.set("customer_email", safeCustomer.email);
@@ -283,13 +375,19 @@ async function createStripeCheckout({ mode, items, plan, customer, successUrl, c
       sessionId: data.id,
       mode,
       status: "pending_redirect",
+      gatewayMode,
+      processor: "stripe",
       amountCents,
       customer: safeCustomer,
       items: normalizedItems,
       plan: normalizedPlan,
       createdAt: new Date().toISOString(),
     }),
-    audit: addAudit(state, "stripe", `Sessao Stripe ${data.id} criada para ${mode}.`),
+    audit: addAudit(
+      state,
+      gatewayMode === "own" ? "gateway-proprio" : "stripe",
+      `Sessao Stripe ${data.id} criada para ${mode}.`
+    ),
   });
 
   return {
@@ -310,6 +408,10 @@ async function retrieveStripeSession(sessionId) {
 
   const url = new URL(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`);
   url.searchParams.append("expand[]", "line_items");
+  url.searchParams.append("expand[]", "payment_intent.payment_method");
+  url.searchParams.append("expand[]", "payment_intent.latest_charge");
+  url.searchParams.append("expand[]", "subscription.default_payment_method");
+  url.searchParams.append("expand[]", "subscription.latest_invoice.payment_intent.payment_method");
 
   const response = await fetch(url, {
     headers: {
@@ -334,6 +436,7 @@ async function retrieveStripeSession(sessionId) {
 function fulfillStripeSession(session) {
   const state = getState();
   const pending = getPendingStripeSession(state, session.id);
+  const gatewayMode = pending?.gatewayMode || session.metadata?.gateway_mode || "stripe";
   const isComplete = session.status === "complete";
   const isPaid = session.payment_status === "paid" || session.payment_status === "no_payment_required";
   const status = isComplete && isPaid ? "succeeded" : session.payment_status || session.status || "open";
@@ -350,6 +453,7 @@ function fulfillStripeSession(session) {
         ...(pending || {}),
         sessionId: session.id,
         mode: session.mode,
+        gatewayMode,
         status,
         amountCents,
         customer: sessionCustomer,
@@ -361,15 +465,18 @@ function fulfillStripeSession(session) {
       fulfilled: false,
       status,
       mode: session.mode,
+      gatewayMode,
     };
   }
 
+  const subscriptionReference = getObjectId(session.subscription);
+  const paymentIntentReference = getObjectId(session.payment_intent);
   const existingPayment = state.payments.find((payment) => payment.processorReference === session.id);
   const existingOrder = state.orders.find((order) => order.processorReference === session.id);
   const existingSubscription = state.subscriptions.find(
     (subscription) =>
       subscription.stripeSessionId === session.id ||
-      (session.subscription && subscription.processorReference === session.subscription)
+      (subscriptionReference && subscription.processorReference === subscriptionReference)
   );
 
   if (existingOrder || existingSubscription || existingPayment) {
@@ -384,19 +491,31 @@ function fulfillStripeSession(session) {
   }
 
   const now = new Date();
+  const gatewayCard = extractGatewayCard(session, sessionCustomer, gatewayMode, now);
+  const nextGatewayCards = gatewayCard ? upsertGatewayCard(state, gatewayCard) : state.gatewayCards;
   const payment = {
     id: createId("pay"),
-    mode: "stripe",
+    mode: gatewayMode,
     status: "succeeded",
     amountCents,
     customerEmail: sessionCustomer.email,
-    cardToken: null,
+    cardToken: gatewayCard
+      ? {
+          id: gatewayCard.id,
+          provider: gatewayCard.provider,
+          token: gatewayCard.token,
+          brand: gatewayCard.brand,
+          last4: gatewayCard.last4,
+          expMonth: gatewayCard.expMonth,
+          expYear: gatewayCard.expYear,
+        }
+      : null,
     processorReference: session.id,
-    descriptor: "STRIPE_CHECKOUT",
+    descriptor: gatewayMode === "own" ? "CASAS_BAHIA_GATEWAY" : "STRIPE_CHECKOUT",
     createdAt: now.toISOString(),
     stripe: {
-      paymentIntent: session.payment_intent || null,
-      subscription: session.subscription || null,
+      paymentIntent: paymentIntentReference,
+      subscription: subscriptionReference,
       livemode: Boolean(session.livemode),
     },
   };
@@ -411,36 +530,42 @@ function fulfillStripeSession(session) {
     const subscription = {
       id: createId("sub"),
       status: "active",
-      mode: "stripe",
+      mode: gatewayMode,
       planId: plan.id,
       planName: plan.name,
       amountCents: plan.amountCents || amountCents,
       interval: plan.interval || "month",
       customer: sessionCustomer,
-      cardTokens: [],
-      billingStrategy: "stripe_recurring",
+      cardTokens: gatewayCard ? [payment.cardToken] : [],
+      billingStrategy: gatewayMode === "own" ? "own_gateway_processor_recurring" : "stripe_recurring",
       lastPaymentId: payment.id,
       nextBillingAt: nextMonthIso(now),
-      processorReference: session.subscription || session.id,
+      processorReference: subscriptionReference || session.id,
       stripeSessionId: session.id,
       createdAt: now.toISOString(),
     };
 
     saveState({
       ...state,
+      gatewayCards: nextGatewayCards,
       payments: [payment, ...state.payments],
       subscriptions: [subscription, ...state.subscriptions],
       stripeSessions: upsertStripeSession(state, {
         ...(pending || {}),
         sessionId: session.id,
         mode: "subscription",
+        gatewayMode,
         status: "fulfilled",
         amountCents,
         customer: sessionCustomer,
         plan,
         fulfilledAt: now.toISOString(),
       }),
-      audit: addAudit(state, "stripe", `Assinatura ${subscription.id} confirmada sem webhook.`),
+      audit: addAudit(
+        state,
+        gatewayMode === "own" ? "gateway-proprio" : "stripe",
+        `Assinatura ${subscription.id} confirmada sem webhook.`
+      ),
     });
 
     return {
@@ -460,7 +585,7 @@ function fulfillStripeSession(session) {
   const order = {
     id: createId("ord"),
     status: "paid",
-    mode: "stripe",
+    mode: gatewayMode,
     customer: sessionCustomer,
     items,
     totals: {
@@ -488,19 +613,25 @@ function fulfillStripeSession(session) {
   saveState({
     ...state,
     products: nextProducts,
+    gatewayCards: nextGatewayCards,
     payments: [payment, ...state.payments],
     orders: [order, ...state.orders],
     stripeSessions: upsertStripeSession(state, {
       ...(pending || {}),
       sessionId: session.id,
       mode: "payment",
+      gatewayMode,
       status: "fulfilled",
       amountCents,
       customer: sessionCustomer,
       items,
       fulfilledAt: now.toISOString(),
     }),
-    audit: addAudit(state, "stripe", `Pedido ${order.id} confirmado sem webhook.`),
+    audit: addAudit(
+      state,
+      gatewayMode === "own" ? "gateway-proprio" : "stripe",
+      `Pedido ${order.id} confirmado sem webhook.`
+    ),
   });
 
   return {
@@ -526,6 +657,22 @@ async function handleApi(req, res, pathname) {
 
   if (pathname === "/api/state/reset" && req.method === "POST") {
     return sendJson(res, 200, resetState());
+  }
+
+  if (pathname === "/api/gateway/checkout" && req.method === "POST") {
+    const payload = await readJson(req);
+    const result = await createStripeCheckout({ mode: "payment", gatewayMode: "own", ...payload });
+    return sendJson(res, result.url ? 200 : 503, result);
+  }
+
+  if (pathname === "/api/gateway/subscription" && req.method === "POST") {
+    const payload = await readJson(req);
+    const result = await createStripeCheckout({ mode: "subscription", gatewayMode: "own", ...payload });
+    return sendJson(res, result.url ? 200 : 503, result);
+  }
+
+  if (pathname === "/api/gateway/cards" && req.method === "GET") {
+    return sendJson(res, 200, { cards: getState().gatewayCards || [] });
   }
 
   if (pathname === "/api/stripe/checkout" && req.method === "POST") {

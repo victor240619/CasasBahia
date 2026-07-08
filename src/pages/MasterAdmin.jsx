@@ -161,11 +161,6 @@ export default function MasterAdmin() {
   };
 
   const setGatewayMode = (mode) => {
-    if (mode === "own") {
-      setNotice("Gateway proprio desativado em producao. Use Stripe ou conecte uma adquirente real certificada.");
-      return;
-    }
-
     setShop((draft) => ({
       ...draft,
       gatewaySettings: { ...draft.gatewaySettings, mode },
@@ -229,18 +224,20 @@ export default function MasterAdmin() {
           </div>
         )}
 
-        <div className="mb-6 grid gap-4 md:grid-cols-4">
+        <div className="mb-6 grid gap-4 md:grid-cols-5">
           <SummaryCard icon={BarChart3} title="Receita aprovada" value={formatBRL(approvedRevenue)} detail={`${shop.payments.length} pagamentos`} />
           <SummaryCard icon={Store} title="Pedidos" value={shop.orders.length} detail={`${shop.orders.filter((order) => order.status === "paid").length} pagos`} />
           <SummaryCard icon={PackagePlus} title="Produtos ativos" value={shop.products.filter((product) => product.active).length} detail={`${shop.products.length} no catalogo`} />
           <SummaryCard icon={CreditCard} title="Assinaturas" value={shop.subscriptions.length} detail={`${shop.subscriptions.filter((item) => item.status === "active").length} ativas`} />
+          <SummaryCard icon={ShieldCheck} title="Cartoes" value={shop.gatewayCards.length} detail="cofre do gateway" />
         </div>
 
-        <div className="mb-4 grid grid-cols-4 overflow-hidden rounded-xl border bg-white text-sm font-bold">
+        <div className="mb-4 grid grid-cols-5 overflow-hidden rounded-xl border bg-white text-sm font-bold">
           {[
             ["products", "Produtos"],
             ["orders", "Pedidos"],
             ["subscriptions", "Assinaturas"],
+            ["cards", "Cartoes"],
             ["gateway", "Gateway"],
           ].map(([id, label]) => (
             <button
@@ -332,11 +329,49 @@ export default function MasterAdmin() {
               subscription.id,
               `${subscription.customer.name} / ${subscription.customer.email}`,
               `${subscription.planName} ${formatBRL(subscription.amountCents)}`,
-              subscription.cardTokens.length
+              subscription.cardTokens?.length
                 ? subscription.cardTokens.map((token) => `${token.brand} final ${token.last4}`).join(", ")
-                : "Stripe",
+                : "Processador",
               subscription.status,
               formatDate(subscription.nextBillingAt),
+            ])}
+          />
+        )}
+
+        {tab === "cards" && (
+          <AdminTable
+            empty="Nenhum cartao registrado ainda."
+            headers={[
+              "Token",
+              "Cliente",
+              "Bandeira",
+              "Final",
+              "Validade",
+              "Tipo",
+              "Pais",
+              "Wallet",
+              "PaymentIntent",
+              "Assinatura",
+              "Sessao",
+              "Gateway",
+              "Status",
+              "Criado",
+            ]}
+            rows={shop.gatewayCards.map((card) => [
+              card.token || card.paymentMethodId || card.id,
+              `${card.customerName || "Cliente"} / ${card.customerEmail || ""}`,
+              card.brand || "-",
+              card.last4 || "-",
+              card.expMonth && card.expYear ? `${String(card.expMonth).padStart(2, "0")}/${card.expYear}` : "-",
+              card.funding || "-",
+              card.country || "-",
+              card.wallet || "-",
+              card.paymentIntentId || "-",
+              card.subscriptionId || "-",
+              card.sourceSessionId || "-",
+              `${card.gatewayMode || "own"} / ${card.provider || "processador"}`,
+              card.status,
+              formatDate(card.createdAt),
             ])}
           />
         )}
@@ -346,9 +381,9 @@ export default function MasterAdmin() {
             <div className="rounded-xl border bg-white p-4 shadow-sm">
               <h2 className="mb-3 text-lg font-black text-gray-900">Versao publica</h2>
               <div className="grid grid-cols-2 gap-2">
-                <button disabled onClick={() => setGatewayMode("own")} className="rounded-xl border px-4 py-4 font-black text-gray-400 opacity-60">
+                <button onClick={() => setGatewayMode("own")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "own" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
                   <ShieldCheck className="mx-auto mb-2 h-5 w-5" />
-                  Gateway proprio indisponivel
+                  Gateway proprio
                 </button>
                 <button onClick={() => setGatewayMode("stripe")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "stripe" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
                   <CreditCard className="mx-auto mb-2 h-5 w-5" />
@@ -356,7 +391,7 @@ export default function MasterAdmin() {
                 </button>
               </div>
               <p className="mt-3 text-sm text-gray-500">
-                Esta vitrine nao aprova pagamento simulado. Cobrancas reais dependem de uma chave Stripe live valida no servidor.
+                Esta vitrine confirma somente cobrancas processadas por adquirente real. O gateway proprio registra tokens/metadados de cartao no cofre.
               </p>
             </div>
             <div className="rounded-xl border bg-white p-4 shadow-sm">
@@ -438,7 +473,7 @@ function AdminLogin({ form, error, onChange, onSubmit }) {
 function AdminTable({ headers, rows, empty }) {
   return (
     <div className="overflow-x-auto rounded-xl border bg-white p-4 shadow-sm">
-      <table className="w-full min-w-[760px] text-left text-sm">
+      <table className="w-full min-w-[1040px] text-left text-sm">
         <thead className="border-b text-gray-500">
           <tr>
             {headers.map((header) => (

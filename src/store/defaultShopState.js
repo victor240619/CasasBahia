@@ -16,12 +16,14 @@ export function createDefaultShopState() {
     payments: [],
     subscriptions: [],
     stripeSessions: [],
+    gatewayCards: [],
     gatewaySettings: {
-      mode: "stripe",
+      mode: "own",
       own: {
-        status: "disabled_production",
+        status: "production",
+        processor: "stripe",
         statementDescriptor: "CASAS BAHIA",
-        vaultPolicy: "tokenize_only",
+        vaultPolicy: "processor_token_only",
         captureMode: "automatic",
       },
       stripe: {
@@ -53,6 +55,7 @@ export function normalizeShopState(state) {
     payments: Array.isArray(state?.payments) ? state.payments : [],
     subscriptions: Array.isArray(state?.subscriptions) ? state.subscriptions : [],
     stripeSessions: Array.isArray(state?.stripeSessions) ? state.stripeSessions : [],
+    gatewayCards: Array.isArray(state?.gatewayCards) ? state.gatewayCards : [],
     audit: Array.isArray(state?.audit) ? state.audit : fallback.audit,
     gatewaySettings: {
       ...fallback.gatewaySettings,

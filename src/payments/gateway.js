@@ -1,4 +1,5 @@
 export const PAYMENT_MODES = {
+  OWN: "own",
   STRIPE: "stripe",
 };
 

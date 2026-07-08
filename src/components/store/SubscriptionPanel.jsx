@@ -3,8 +3,10 @@ import { CreditCard } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { formatBRL } from "@/lib/money";
 import { subscriptionPlans } from "@/payments/gateway";
+import { useShopState } from "@/store/shopStore";
 
 export default function SubscriptionPanel() {
+  const [shop] = useShopState();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     planId: "sub-10",
@@ -13,13 +15,16 @@ export default function SubscriptionPanel() {
   });
 
   const selectedPlan = subscriptionPlans.find((plan) => plan.id === form.planId);
+  const isOwnGateway = shop.gatewaySettings.mode === "own";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/stripe/subscription", {
+      const response = await fetch(
+        isOwnGateway ? "/api/gateway/subscription" : "/api/stripe/subscription",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -28,7 +33,8 @@ export default function SubscriptionPanel() {
           successUrl: `${window.location.origin}/sucesso?subscription=1`,
           cancelUrl: `${window.location.origin}/`,
         }),
-      });
+        }
+      );
       const data = await response.json();
 
       if (data?.url) {
@@ -56,12 +62,12 @@ export default function SubscriptionPanel() {
           </p>
           <h2 className="text-xl font-black text-gray-800">Assinatura mensal</h2>
           <p className="text-sm text-gray-500">
-            Escolha R$ 10, R$ 25 ou R$ 40 e cobre todo mes pela Stripe em producao.
+            Escolha R$ 10, R$ 25 ou R$ 40 e cobre todo mes em producao.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
           <CreditCard className="w-4 h-4" />
-          Stripe recorrente
+          {isOwnGateway ? "Gateway proprio recorrente" : "Stripe recorrente"}
         </div>
       </div>
 
@@ -102,7 +108,7 @@ export default function SubscriptionPanel() {
         </div>
 
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-          A assinatura e criada no Stripe Checkout recorrente. Os dados de cartao ficam no Stripe.
+          A assinatura e criada por processador real. O gateway registra o token e os metadados do cartao.
         </div>
 
         <button

@@ -4,8 +4,10 @@ import { toast } from "@/components/ui/use-toast";
 import Header from "../components/store/Header";
 import Footer from "../components/store/Footer";
 import { getDiscountedPrice } from "../data/products";
+import { useShopState } from "../store/shopStore";
 
 export default function Checkout() {
+  const [shop] = useShopState();
   const [cart, setCart] = useState(() => {
     try {
       const storedCart = sessionStorage.getItem("checkout_cart");
@@ -47,6 +49,7 @@ export default function Checkout() {
 
   const product = cart[0];
   const total = getDiscountedPrice(product) * product.qty;
+  const isOwnGateway = shop.gatewaySettings.mode === "own";
 
   const handleCheckout = async () => {
     if (window.self !== window.top) {
@@ -63,7 +66,7 @@ export default function Checkout() {
         qty: product.qty,
       }];
 
-      const response = await fetch("/api/stripe/checkout", {
+      const response = await fetch(isOwnGateway ? "/api/gateway/checkout" : "/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,7 +182,7 @@ export default function Checkout() {
             {/* Price Card */}
             <div className="bg-white rounded-lg p-6 mb-4 sticky top-4">
               <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
-                Checkout Stripe producao
+                {isOwnGateway ? "Gateway proprio producao" : "Checkout Stripe producao"}
               </div>
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-1">
