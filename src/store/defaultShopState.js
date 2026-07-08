@@ -15,6 +15,7 @@ export function createDefaultShopState() {
     orders: [],
     payments: [],
     subscriptions: [],
+    stripeSessions: [],
     gatewaySettings: {
       mode: "own",
       own: {
@@ -51,6 +52,7 @@ export function normalizeShopState(state) {
     orders: Array.isArray(state?.orders) ? state.orders : [],
     payments: Array.isArray(state?.payments) ? state.payments : [],
     subscriptions: Array.isArray(state?.subscriptions) ? state.subscriptions : [],
+    stripeSessions: Array.isArray(state?.stripeSessions) ? state.stripeSessions : [],
     audit: Array.isArray(state?.audit) ? state.audit : fallback.audit,
     gatewaySettings: {
       ...fallback.gatewaySettings,

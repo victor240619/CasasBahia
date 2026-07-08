@@ -121,7 +121,8 @@ export default function Checkout() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          successUrl: `${window.location.origin}/sucesso`,
+          customer,
+          successUrl: `${window.location.origin}/sucesso?checkout=1`,
           cancelUrl: `${window.location.origin}/checkout`,
         }),
       });
@@ -301,6 +302,24 @@ export default function Checkout() {
                       className="border border-gray-300 rounded px-3 py-2 text-sm"
                     />
                   </div>
+                </div>
+              )}
+
+              {!isOwnGateway && (
+                <div className="space-y-3 mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <input
+                    value={customer.name}
+                    onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
+                    placeholder="Nome do comprador"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={customer.email}
+                    onChange={(event) => setCustomer((current) => ({ ...current, email: event.target.value }))}
+                    placeholder="email@cliente.com"
+                    type="email"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
                 </div>
               )}
 
