@@ -25,14 +25,14 @@ export default function SubscriptionPanel() {
       const response = await fetch(
         isOwnGateway ? "/api/gateway/subscription" : "/api/stripe/subscription",
         {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan: selectedPlan,
-          customer: { name: form.name, email: form.email },
-          successUrl: `${window.location.origin}/sucesso?subscription=1`,
-          cancelUrl: `${window.location.origin}/`,
-        }),
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: selectedPlan,
+            customer: { name: form.name, email: form.email },
+            successUrl: `${window.location.origin}/sucesso?subscription=1`,
+            cancelUrl: `${window.location.origin}/`,
+          }),
         }
       );
       const data = await response.json();
@@ -40,7 +40,7 @@ export default function SubscriptionPanel() {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        throw new Error(data?.error || "URL de assinatura Stripe nao recebida");
+        throw new Error(data?.error || "URL de assinatura nao recebida");
       }
     } catch (error) {
       toast({

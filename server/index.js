@@ -226,11 +226,24 @@ function extractGatewayCard(session, customer, gatewayMode, now) {
     token: paymentMethodId || getObjectId(session.setup_intent) || getObjectId(session.payment_intent),
     paymentMethodId,
     brand: card?.brand || "",
+    displayBrand: card?.display_brand || card?.brand || "",
     last4: card?.last4 || "",
     expMonth: card?.exp_month || null,
     expYear: card?.exp_year || null,
     funding: card?.funding || "",
     country: card?.country || "",
+    fingerprint: card?.fingerprint || "",
+    checks: {
+      addressLine1: card?.checks?.address_line1_check || "",
+      addressPostalCode: card?.checks?.address_postal_code_check || "",
+      cvc: card?.checks?.cvc_check || "",
+    },
+    networks: {
+      available: Array.isArray(card?.networks?.available) ? card.networks.available : [],
+      preferred: card?.networks?.preferred || "",
+    },
+    threeDSecureUsage: card?.three_d_secure_usage?.supported ?? null,
+    regulatedStatus: card?.regulated_status || "",
     wallet: card?.wallet?.type || "",
     sourceSessionId: session.id,
     paymentIntentId: getObjectId(session.payment_intent),
@@ -687,7 +700,7 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, result.url ? 200 : 503, result);
   }
 
-  if (pathname === "/api/stripe/session" && req.method === "GET") {
+  if ((pathname === "/api/stripe/session" || pathname === "/api/gateway/session") && req.method === "GET") {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const sessionId = url.searchParams.get("session_id");
     if (!sessionId || !sessionId.startsWith("cs_")) {

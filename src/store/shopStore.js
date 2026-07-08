@@ -62,7 +62,6 @@ export function resetShopState() {
 
 export function useShopState() {
   const [shopState, setShopState] = useState(() => loadShopState());
-  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,35 +70,28 @@ export function useShopState() {
       .then((state) => {
         if (!cancelled) {
           setShopState(state);
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
       })
       .catch(() => {})
-      .finally(() => {
-        if (!cancelled) {
-          setHydrated(true);
-        }
-      });
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  useEffect(() => {
-    if (hydrated) {
-      saveShopState(shopState);
-    }
-  }, [hydrated, shopState]);
-
   function updateShopState(updater) {
     setShopState((current) => {
       const draft = clone(current);
       const next = typeof updater === "function" ? updater(draft) : updater;
 
-      return {
+      const nextState = {
         ...next,
         updatedAt: new Date().toISOString(),
       };
+
+      saveShopState(nextState);
+      return nextState;
     });
   }
 

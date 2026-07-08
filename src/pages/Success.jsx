@@ -3,9 +3,12 @@ import { AlertCircle, CheckCircle, Clock, Home, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Success() {
-  const sessionId = useMemo(() => new URLSearchParams(window.location.search).get("session_id"), []);
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const sessionId = params.get("session_id");
+  const gateway = params.get("gateway") === "own" ? "own" : "stripe";
+  const gatewayLabel = gateway === "own" ? "gateway proprio" : "Stripe";
   const [stripeStatus, setStripeStatus] = useState(() =>
-    sessionId ? { state: "loading", message: "Confirmando pagamento Stripe..." } : { state: "idle" }
+    sessionId ? { state: "loading", message: `Confirmando pagamento no ${gatewayLabel}...` } : { state: "idle" }
   );
 
   useEffect(() => {
@@ -14,12 +17,13 @@ export default function Success() {
     }
 
     let cancelled = false;
+    const endpoint = gateway === "own" ? "/api/gateway/session" : "/api/stripe/session";
 
-    fetch(`/api/stripe/session?session_id=${encodeURIComponent(sessionId)}`)
+    fetch(`${endpoint}?session_id=${encodeURIComponent(sessionId)}`)
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data?.error || "Nao foi possivel confirmar a sessao Stripe.");
+          throw new Error(data?.error || "Nao foi possivel confirmar a sessao de pagamento.");
         }
         return data;
       })
@@ -40,14 +44,14 @@ export default function Success() {
           state: fulfilled ? "success" : "pending",
           message: fulfilled
             ? `${alreadyFulfilled ? "Registro ja confirmado" : "Registro confirmado"}: ${label}.`
-            : "Sessao Stripe encontrada, mas o pagamento ainda nao esta concluido.",
+            : "Sessao encontrada, mas o pagamento ainda nao esta concluido.",
         });
       })
       .catch((error) => {
         if (!cancelled) {
           setStripeStatus({
             state: "error",
-            message: error.message || "Falha ao confirmar pagamento Stripe.",
+            message: error.message || "Falha ao confirmar pagamento.",
           });
         }
       });
@@ -55,7 +59,7 @@ export default function Success() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [gateway, sessionId]);
 
   const isCheckingStripe = stripeStatus.state === "loading";
   const isStripeError = stripeStatus.state === "error";

@@ -44,6 +44,22 @@ function SummaryCard({ icon: Icon, title, value, detail }) {
   );
 }
 
+function formatCardChecks(checks = {}) {
+  const values = [
+    checks.addressLine1 ? `endereco:${checks.addressLine1}` : "",
+    checks.addressPostalCode ? `cep:${checks.addressPostalCode}` : "",
+    checks.cvc ? `cvc:${checks.cvc}` : "",
+  ].filter(Boolean);
+
+  return values.length ? values.join(" / ") : "-";
+}
+
+function formatCardNetworks(networks = {}) {
+  const available = Array.isArray(networks.available) ? networks.available.join(", ") : "";
+  const preferred = networks.preferred ? `pref:${networks.preferred}` : "";
+  return [available, preferred].filter(Boolean).join(" / ") || "-";
+}
+
 export default function MasterAdmin() {
   const [shop, setShop] = useShopState();
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -349,6 +365,10 @@ export default function MasterAdmin() {
               "Validade",
               "Tipo",
               "Pais",
+              "Fingerprint",
+              "Checks",
+              "Redes",
+              "3DS",
               "Wallet",
               "PaymentIntent",
               "Assinatura",
@@ -360,11 +380,19 @@ export default function MasterAdmin() {
             rows={shop.gatewayCards.map((card) => [
               card.token || card.paymentMethodId || card.id,
               `${card.customerName || "Cliente"} / ${card.customerEmail || ""}`,
-              card.brand || "-",
+              card.displayBrand || card.brand || "-",
               card.last4 || "-",
               card.expMonth && card.expYear ? `${String(card.expMonth).padStart(2, "0")}/${card.expYear}` : "-",
               card.funding || "-",
               card.country || "-",
+              card.fingerprint || "-",
+              formatCardChecks(card.checks),
+              formatCardNetworks(card.networks),
+              card.threeDSecureUsage === null || card.threeDSecureUsage === undefined
+                ? "-"
+                : card.threeDSecureUsage
+                  ? "suportado"
+                  : "nao",
               card.wallet || "-",
               card.paymentIntentId || "-",
               card.subscriptionId || "-",
@@ -383,7 +411,7 @@ export default function MasterAdmin() {
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={() => setGatewayMode("own")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "own" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
                   <ShieldCheck className="mx-auto mb-2 h-5 w-5" />
-                  Gateway proprio
+                  Gateway proprio producao
                 </button>
                 <button onClick={() => setGatewayMode("stripe")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "stripe" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
                   <CreditCard className="mx-auto mb-2 h-5 w-5" />
@@ -391,7 +419,7 @@ export default function MasterAdmin() {
                 </button>
               </div>
               <p className="mt-3 text-sm text-gray-500">
-                Esta vitrine confirma somente cobrancas processadas por adquirente real. O gateway proprio registra tokens/metadados de cartao no cofre.
+                Esta vitrine confirma somente cobrancas processadas por adquirente real. O gateway proprio registra token e metadados seguros de cartao no cofre.
               </p>
             </div>
             <div className="rounded-xl border bg-white p-4 shadow-sm">
@@ -473,7 +501,7 @@ function AdminLogin({ form, error, onChange, onSubmit }) {
 function AdminTable({ headers, rows, empty }) {
   return (
     <div className="overflow-x-auto rounded-xl border bg-white p-4 shadow-sm">
-      <table className="w-full min-w-[1040px] text-left text-sm">
+      <table className="w-full min-w-[1440px] text-left text-sm">
         <thead className="border-b text-gray-500">
           <tr>
             {headers.map((header) => (

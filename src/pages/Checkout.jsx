@@ -81,7 +81,7 @@ export default function Checkout() {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        throw new Error(data?.error || "URL de checkout Stripe nao recebida");
+        throw new Error(data?.error || "URL de checkout nao recebida");
       }
     } catch (error) {
       toast({

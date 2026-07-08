@@ -46,7 +46,7 @@ O Vite faz proxy de `/api` para `http://127.0.0.1:8787`.
 - Para rodar com Stripe, crie um `.env` local com `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY`.
 - O webhook nao e obrigatorio para confirmar a compra inicial: a tela `/sucesso` recebe `session_id`, o servidor consulta a Checkout Session no Stripe e grava pedido/assinatura no SQLite de forma idempotente.
 - Para acompanhar renovacoes mensais, cancelamentos e falhas futuras em tempo real, webhooks continuam sendo o caminho recomendado pelo Stripe.
-- O cofre do gateway grava token/id do processador, bandeira, final 4, validade, tipo, pais, wallet, cliente, sessao e status. Numero completo e CVV nao sao armazenados.
+- O cofre do gateway grava token/id do processador, bandeira, final 4, validade, tipo, pais, fingerprint, checks, redes, 3DS, wallet, cliente, sessao, PaymentIntent/assinatura e status. Numero completo e CVV nao sao armazenados.
 
 ## Publicacao gratis
 
