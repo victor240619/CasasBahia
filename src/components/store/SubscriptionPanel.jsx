@@ -1,98 +1,24 @@
 import React, { useState } from "react";
-import { CreditCard, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { formatBRL, formatDate } from "@/lib/money";
-import { createSubscription, subscriptionPlans } from "@/payments/gateway";
-import { useShopState } from "@/store/shopStore";
-
-function emptyCard(holderName = "") {
-  return {
-    holderName,
-    number: "",
-    expMonth: "",
-    expYear: "",
-    cvc: "",
-  };
-}
+import { formatBRL } from "@/lib/money";
+import { subscriptionPlans } from "@/payments/gateway";
 
 export default function SubscriptionPanel() {
-  const [shop, setShop] = useShopState();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     planId: "sub-10",
     name: "",
     email: "",
-    cards: [emptyCard()],
   });
 
   const selectedPlan = subscriptionPlans.find((plan) => plan.id === form.planId);
-  const isOwnGateway = shop.gatewaySettings.mode === "own";
-
-  const updateCard = (index, field, value) => {
-    setForm((current) => ({
-      ...current,
-      cards: current.cards.map((card, cardIndex) =>
-        cardIndex === index ? { ...card, [field]: value } : card
-      ),
-    }));
-  };
-
-  const addCard = () => {
-    setForm((current) => {
-      if (current.cards.length >= 20) {
-        return current;
-      }
-      return {
-        ...current,
-        cards: [...current.cards, emptyCard(current.name)],
-      };
-    });
-  };
-
-  const removeCard = (index) => {
-    setForm((current) => ({
-      ...current,
-      cards: current.cards.filter((_, cardIndex) => cardIndex !== index),
-    }));
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
 
     try {
-      if (isOwnGateway) {
-        const { subscription, payment } = createSubscription({
-          mode: "own",
-          planId: form.planId,
-          customer: { name: form.name, email: form.email },
-          cards: form.cards,
-          gatewaySettings: shop.gatewaySettings,
-        });
-
-        setShop((draft) => ({
-          ...draft,
-          subscriptions: [subscription, ...draft.subscriptions],
-          payments: [payment, ...draft.payments],
-          audit: [
-            {
-              id: `audit-${Date.now()}`,
-              at: new Date().toISOString(),
-              actor: "subscriptions",
-              action: `Assinatura ${subscription.id} criada no gateway proprio.`,
-            },
-            ...draft.audit,
-          ],
-        }));
-
-        setForm({ planId: "sub-10", name: "", email: "", cards: [emptyCard()] });
-        toast({
-          title: "Assinatura ativa",
-          description: `Proxima cobranca em ${formatDate(subscription.nextBillingAt)}.`,
-        });
-        return;
-      }
-
       const response = await fetch("/api/stripe/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,12 +56,12 @@ export default function SubscriptionPanel() {
           </p>
           <h2 className="text-xl font-black text-gray-800">Assinatura mensal</h2>
           <p className="text-sm text-gray-500">
-            Escolha R$ 10, R$ 25 ou R$ 40 e cobre todo mes com fallback de ate 20 cartoes.
+            Escolha R$ 10, R$ 25 ou R$ 40 e cobre todo mes pela Stripe em producao.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
-          {isOwnGateway ? <ShieldCheck className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
-          {isOwnGateway ? "Gateway proprio sandbox" : "Stripe recorrente"}
+          <CreditCard className="w-4 h-4" />
+          Stripe recorrente
         </div>
       </div>
 
@@ -175,78 +101,9 @@ export default function SubscriptionPanel() {
           />
         </div>
 
-        {isOwnGateway ? (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-gray-500">
-                O sistema salva apenas token, bandeira, final 4 e validade. Numero completo e CVV
-                nao ficam guardados.
-              </p>
-              <button
-                type="button"
-                onClick={addCard}
-                disabled={form.cards.length >= 20}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold text-gray-700 hover:border-blue-500 disabled:opacity-50"
-              >
-                <Plus className="w-4 h-4" />
-                Cartao {form.cards.length}/20
-              </button>
-            </div>
-
-            {form.cards.map((card, index) => (
-              <div key={index} className="grid gap-2 rounded-xl bg-gray-50 p-3 md:grid-cols-12">
-                <input
-                  value={card.holderName}
-                  onChange={(event) => updateCard(index, "holderName", event.target.value)}
-                  placeholder="Nome impresso"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-3"
-                />
-                <input
-                  value={card.number}
-                  onChange={(event) => updateCard(index, "number", event.target.value)}
-                  placeholder="4242 4242 4242 4242"
-                  inputMode="numeric"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-4"
-                />
-                <input
-                  value={card.expMonth}
-                  onChange={(event) => updateCard(index, "expMonth", event.target.value)}
-                  placeholder="MM"
-                  inputMode="numeric"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-1"
-                />
-                <input
-                  value={card.expYear}
-                  onChange={(event) => updateCard(index, "expYear", event.target.value)}
-                  placeholder="AAAA"
-                  inputMode="numeric"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-2"
-                />
-                <input
-                  value={card.cvc}
-                  onChange={(event) => updateCard(index, "cvc", event.target.value)}
-                  placeholder="CVV"
-                  inputMode="numeric"
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm md:col-span-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeCard(index)}
-                  disabled={form.cards.length === 1}
-                  className="inline-flex items-center justify-center rounded-lg border border-gray-300 text-gray-500 hover:text-red-600 disabled:opacity-40 md:col-span-1"
-                  aria-label="Remover cartao"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-            A versao Stripe envia a assinatura para o Stripe Checkout recorrente. Os dados de cartao
-            ficam no Stripe.
-          </div>
-        )}
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+          A assinatura e criada no Stripe Checkout recorrente. Os dados de cartao ficam no Stripe.
+        </div>
 
         <button
           type="submit"

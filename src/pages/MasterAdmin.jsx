@@ -161,6 +161,11 @@ export default function MasterAdmin() {
   };
 
   const setGatewayMode = (mode) => {
+    if (mode === "own") {
+      setNotice("Gateway proprio desativado em producao. Use Stripe ou conecte uma adquirente real certificada.");
+      return;
+    }
+
     setShop((draft) => ({
       ...draft,
       gatewaySettings: { ...draft.gatewaySettings, mode },
@@ -341,17 +346,17 @@ export default function MasterAdmin() {
             <div className="rounded-xl border bg-white p-4 shadow-sm">
               <h2 className="mb-3 text-lg font-black text-gray-900">Versao publica</h2>
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => setGatewayMode("own")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "own" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
+                <button disabled onClick={() => setGatewayMode("own")} className="rounded-xl border px-4 py-4 font-black text-gray-400 opacity-60">
                   <ShieldCheck className="mx-auto mb-2 h-5 w-5" />
-                  Gateway proprio
+                  Gateway proprio indisponivel
                 </button>
                 <button onClick={() => setGatewayMode("stripe")} className={`rounded-xl px-4 py-4 font-black ${shop.gatewaySettings.mode === "stripe" ? "bg-blue-700 text-white" : "border text-gray-700"}`}>
                   <CreditCard className="mx-auto mb-2 h-5 w-5" />
-                  Stripe
+                  Stripe producao
                 </button>
               </div>
               <p className="mt-3 text-sm text-gray-500">
-                O gateway proprio desta fase e sandbox/tokenizado. Para cartao real, conecte uma adquirente/token vault certificada.
+                Esta vitrine nao aprova pagamento simulado. Cobrancas reais dependem de uma chave Stripe live valida no servidor.
               </p>
             </div>
             <div className="rounded-xl border bg-white p-4 shadow-sm">

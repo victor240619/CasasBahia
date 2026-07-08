@@ -17,9 +17,9 @@ export function createDefaultShopState() {
     subscriptions: [],
     stripeSessions: [],
     gatewaySettings: {
-      mode: "own",
+      mode: "stripe",
       own: {
-        status: "sandbox",
+        status: "disabled_production",
         statementDescriptor: "CASAS BAHIA",
         vaultPolicy: "tokenize_only",
         captureMode: "automatic",

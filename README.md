@@ -40,8 +40,8 @@ O Vite faz proxy de `/api` para `http://127.0.0.1:8787`.
 
 ## Pagamentos
 
-- Gateway proprio: sandbox tokenizado, sem armazenar numero completo do cartao nem CVV.
-- Stripe: usa a API propria `/api/stripe/*`; requer `STRIPE_SECRET_KEY` no ambiente do servidor.
+- Producao: a vitrine publica usa Stripe Checkout live via `/api/stripe/*`; requer `STRIPE_SECRET_KEY` valida no ambiente do servidor.
+- Gateway proprio: desativado na vitrine de producao. Para cartao real fora da Stripe, conecte uma adquirente/token vault certificada antes de habilitar.
 - Para rodar com Stripe, crie um `.env` local com `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY`.
 - O webhook nao e obrigatorio para confirmar a compra inicial: a tela `/sucesso` recebe `session_id`, o servidor consulta a Checkout Session no Stripe e grava pedido/assinatura no SQLite de forma idempotente.
 - Para acompanhar renovacoes mensais, cancelamentos e falhas futuras em tempo real, webhooks continuam sendo o caminho recomendado pelo Stripe.
