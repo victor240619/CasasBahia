@@ -1,47 +1,7 @@
 import { useEffect, useState } from "react";
-import { products } from "../data/products.js";
+import { createDefaultShopState, normalizeShopState } from "./defaultShopState.js";
 
 export const STORAGE_KEY = "casas-bahia-store:v1";
-
-function normalizeProducts(items) {
-  return items.map((product) => ({
-    ...product,
-    stock: Number.isFinite(product.stock) ? product.stock : 999,
-    active: product.active ?? true,
-  }));
-}
-
-export function createDefaultShopState() {
-  return {
-    version: 1,
-    products: normalizeProducts(products),
-    orders: [],
-    payments: [],
-    subscriptions: [],
-    gatewaySettings: {
-      mode: "own",
-      own: {
-        status: "sandbox",
-        statementDescriptor: "CASAS BAHIA",
-        vaultPolicy: "tokenize_only",
-        captureMode: "automatic",
-      },
-      stripe: {
-        status: "base44_function",
-        publishableKey: "",
-        webhookConfigured: false,
-      },
-    },
-    audit: [
-      {
-        id: "audit-initial",
-        at: new Date().toISOString(),
-        actor: "system",
-        action: "Loja inicializada em modo sandbox seguro.",
-      },
-    ],
-  };
-}
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -59,17 +19,22 @@ export function loadShopState() {
     }
 
     const parsed = JSON.parse(stored);
-    if (parsed?.version !== 1) {
+    if (!parsed?.version) {
       return createDefaultShopState();
     }
 
-    return {
-      ...parsed,
-      products: normalizeProducts(parsed.products || products),
-    };
+    return normalizeShopState(parsed);
   } catch {
     return createDefaultShopState();
   }
+}
+
+export async function fetchShopState() {
+  const response = await fetch("/api/state");
+  if (!response.ok) {
+    throw new Error("Nao foi possivel carregar o banco SQL.");
+  }
+  return normalizeShopState(await response.json());
 }
 
 export function saveShopState(state) {
@@ -77,7 +42,16 @@ export function saveShopState(state) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const normalized = normalizeShopState(state);
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+
+  fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalized),
+  }).catch(() => {
+    // Static preview fallback keeps the storefront usable without the API.
+  });
 }
 
 export function resetShopState() {
@@ -88,10 +62,34 @@ export function resetShopState() {
 
 export function useShopState() {
   const [shopState, setShopState] = useState(() => loadShopState());
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    saveShopState(shopState);
-  }, [shopState]);
+    let cancelled = false;
+
+    fetchShopState()
+      .then((state) => {
+        if (!cancelled) {
+          setShopState(state);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) {
+          setHydrated(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      saveShopState(shopState);
+    }
+  }, [hydrated, shopState]);
 
   function updateShopState(updater) {
     setShopState((current) => {

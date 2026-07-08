@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Heart, Share2, Star, CreditCard, Truck, Shield } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { toast } from "@/components/ui/use-toast";
 import Header from "../components/store/Header";
 import Footer from "../components/store/Footer";
@@ -12,6 +11,10 @@ export default function Checkout() {
   const [shop, setShop] = useShopState();
   const [cart, setCart] = useState(() => {
     try {
+      const storedCart = sessionStorage.getItem("checkout_cart");
+      if (storedCart) {
+        return JSON.parse(storedCart);
+      }
       const stored = localStorage.getItem("checkout_product");
       return stored ? [JSON.parse(stored)] : [];
     } catch {
@@ -113,21 +116,26 @@ export default function Checkout() {
         qty: product.qty,
       }];
 
-      const response = await base44.functions.invoke("createCheckout", {
-        items,
-        successUrl: `${window.location.origin}/sucesso`,
-        cancelUrl: `${window.location.origin}/checkout`,
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          successUrl: `${window.location.origin}/sucesso`,
+          cancelUrl: `${window.location.origin}/checkout`,
+        }),
       });
+      const data = await response.json();
 
-      if (response?.data?.url) {
-        window.location.href = response.data.url;
+      if (data?.url) {
+        window.location.href = data.url;
       } else {
-        throw new Error("URL de checkout não recebida");
+        throw new Error(data?.error || "URL de checkout Stripe nao recebida");
       }
     } catch (error) {
       toast({
         title: "Erro no checkout",
-        description: error?.response?.data?.error || error.message,
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -223,7 +231,7 @@ export default function Checkout() {
             {/* Price Card */}
             <div className="bg-white rounded-lg p-6 mb-4 sticky top-4">
               <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
-                {isOwnGateway ? "Gateway proprio seguro em sandbox" : "Checkout Stripe via Base44"}
+                {isOwnGateway ? "Gateway proprio seguro em sandbox" : "Checkout Stripe via API propria"}
               </div>
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-1">

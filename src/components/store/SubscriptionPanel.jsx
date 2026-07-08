@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { CreditCard, Plus, ShieldCheck, Trash2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { toast } from "@/components/ui/use-toast";
 import { formatBRL, formatDate } from "@/lib/money";
 import { createSubscription, subscriptionPlans } from "@/payments/gateway";
@@ -94,19 +93,22 @@ export default function SubscriptionPanel() {
         return;
       }
 
-      const response = await base44.functions.invoke("createSubscriptionCheckout", {
-        planId: selectedPlan.id,
-        planName: selectedPlan.name,
-        amountCents: selectedPlan.amountCents,
-        customer: { name: form.name, email: form.email },
-        successUrl: `${window.location.origin}/sucesso?subscription=1`,
-        cancelUrl: `${window.location.origin}/`,
+      const response = await fetch("/api/stripe/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          customer: { name: form.name, email: form.email },
+          successUrl: `${window.location.origin}/sucesso?subscription=1`,
+          cancelUrl: `${window.location.origin}/`,
+        }),
       });
+      const data = await response.json();
 
-      if (response?.data?.url) {
-        window.location.href = response.data.url;
+      if (data?.url) {
+        window.location.href = data.url;
       } else {
-        throw new Error(response?.data?.error || "URL de assinatura Stripe nao recebida");
+        throw new Error(data?.error || "URL de assinatura Stripe nao recebida");
       }
     } catch (error) {
       toast({

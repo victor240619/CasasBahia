@@ -1,39 +1,56 @@
-**Welcome to your Base44 project** 
+# Casas Bahia Store
 
-**About**
+Loja online React/Vite com backend Node proprio e banco SQL gratuito em SQLite.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Rodar localmente
 
-This project contains everything you need to run your app locally.
-
-**Edit the code in your local development environment**
-
-Any change pushed to the repo will also be reflected in the Base44 Builder.
-
-**Prerequisites:** 
-
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
+```bash
+npm install
+npm run build
+npm start
 ```
 
-Run the app: `npm run dev`
+Servidor:
 
-**Publish your changes**
+- App: `http://127.0.0.1:8787`
+- Health/API: `http://127.0.0.1:8787/api/health`
+- Banco SQL: `data/store.sqlite`
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+## Desenvolvimento frontend
 
-**Docs & Support**
+Em uma janela rode a API:
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+```bash
+npm start
+```
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+Em outra rode o Vite:
+
+```bash
+npm run dev
+```
+
+O Vite faz proxy de `/api` para `http://127.0.0.1:8787`.
+
+## Admin
+
+- URL: `/master`
+- Email: `casasb@casasbahia.com`
+- Senha: configurada no codigo como hash SHA-256, nao texto puro.
+
+## Pagamentos
+
+- Gateway proprio: sandbox tokenizado, sem armazenar numero completo do cartao nem CVV.
+- Stripe: usa a API propria `/api/stripe/*`; requer `STRIPE_SECRET_KEY` no ambiente do servidor.
+
+## Publicacao gratis
+
+O workflow em `.github/workflows/pages.yml` publica uma versao estatica no GitHub Pages, usando o dominio gratis `github.io`.
+
+Observacao: GitHub Pages nao roda backend Node nem SQLite. Para SQL real em publico, use um host Node gratuito/baixo custo com disco persistente e rode `npm start`.
+
+## Validacao
+
+```bash
+npm run check
+```

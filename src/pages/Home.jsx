@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { toast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "../components/store/Header";
@@ -11,7 +10,6 @@ import ProductCard from "../components/store/ProductCard";
 import CartSidebar from "../components/store/CartSidebar";
 import ProductModal from "../components/store/ProductModal";
 import SubscriptionPanel from "../components/store/SubscriptionPanel";
-import { getDiscountedPrice } from "../data/products";
 import Footer from "../components/store/Footer";
 import { useShopState } from "../store/shopStore";
 
@@ -74,41 +72,8 @@ export default function Home() {
     }
 
     setIsCheckingOut(true);
-    try {
-      const items = cart.map((item) => {
-        const discountedPrice = getDiscountedPrice(item);
-        return {
-          name: item.name || "Produto sem nome",
-          image: item.image || "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=400&fit=crop",
-          discountedPrice: Math.max(discountedPrice, 0.01), // Mínimo 0.01
-          qty: Math.max(item.qty || 1, 1),
-        };
-      });
-
-      const payload = {
-        items,
-        successUrl: `${window.location.origin}/sucesso`,
-        cancelUrl: `${window.location.origin}/`,
-      };
-
-      const response = await base44.functions.invoke("createCheckout", payload);
-      
-      if (response?.data?.url) {
-        window.location.href = response.data.url;
-      } else {
-        throw new Error(response?.data?.error || "URL de checkout não recebida");
-      }
-    } catch (error) {
-      console.error("Erro no checkout:", error);
-      const errorMsg = error?.response?.data?.error || error.message || "Erro desconhecido";
-      toast({ 
-        title: "Erro no checkout", 
-        description: errorMsg, 
-        variant: "destructive" 
-      });
-    } finally {
-      setIsCheckingOut(false);
-    }
+    sessionStorage.setItem("checkout_cart", JSON.stringify(cart));
+    window.location.href = "/checkout";
   };
 
   return (

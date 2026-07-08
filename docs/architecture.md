@@ -2,71 +2,59 @@
 
 ## Objetivo
 
-Transformar o esqueleto Base44/Vite em uma loja online com duas versoes de checkout:
+Loja online com visual Casas Bahia, backend proprio, banco SQL gratuito e dois modos de pagamento:
 
-- `gateway-proprio`: camada propria de checkout, tokenizacao e orquestracao de pagamento.
-- `stripe`: camada alternativa preparada para Stripe Checkout/Payment Intents.
+- `gateway-proprio`: sandbox tokenizado para compras e assinaturas.
+- `stripe`: checkout externo via Stripe quando `STRIPE_SECRET_KEY` estiver configurada no servidor.
 
-O app tambem precisa de um Master Admin para controlar vitrine, pedidos, assinaturas, modo de gateway e operacao comercial.
+## Stack
 
-## Limite de seguranca para cartoes
+- Frontend: React + Vite + Tailwind.
+- Backend: Node.js HTTP server nativo.
+- Banco SQL: SQLite via `node:sqlite`, sem dependencia nativa extra.
+- Deploy local/producao simples: `npm run build && npm start`.
 
-O gateway proprio nao deve guardar PAN completo, CVV, trilha magnetica, nem dados sensiveis de autenticacao. A Fase 1 implementa tokenizacao local/sandbox e persiste apenas token, bandeira, final 4 e validade. Para capturar dinheiro real com gateway proprio, a Fase 3 precisa integrar uma adquirente/token vault certificada, TLS, controles PCI DSS e auditoria operacional.
+## Persistencia SQL
 
-Referencias usadas:
+O servidor cria `data/store.sqlite` automaticamente e salva o estado principal da loja na tabela `app_state`.
 
-- PCI SSC: CVV/CVC nao pode ser armazenado depois da autorizacao.
-- PCI SSC: PCI DSS se aplica a entidades que armazenam, processam ou transmitem dados de cartao.
-- Stripe: Stripe.js/Elements tokenizam dados sensiveis para reduzir o escopo PCI.
+Dados persistidos:
 
-## Modulos
+- produtos;
+- pedidos;
+- pagamentos;
+- assinaturas;
+- auditoria;
+- configuracao do gateway.
 
-### Frontend
+## Pagamentos
 
-- React + Vite.
-- Tailwind + componentes existentes em `src/components/ui`.
-- Rotas:
-  - `/` e `/shop`: vitrine, carrinho, checkout e assinaturas.
-  - `/master`: painel Master Admin.
+O gateway proprio nunca persiste PAN completo nem CVV. Ele valida Luhn, tokeniza e salva apenas:
 
-### Dominio
+- token;
+- bandeira;
+- final 4;
+- validade;
+- nome impresso.
 
-- Produtos, estoque, pedidos, pagamentos e assinaturas.
-- Planos recorrentes: R$ 10, R$ 25 e R$ 40.
-- Assinatura com ate 20 metodos de pagamento tokenizados. A logica correta e tentar o principal e usar os demais como fallback, cobrando no maximo uma vez por ciclo.
+Para pagamento real com gateway proprio, ainda e necessario contratar adquirente/processador e token vault certificado PCI DSS.
 
-### Pagamentos
+## Master Admin
 
-- `gateway-proprio`: validacao, Luhn, deteccao de bandeira, token sandbox e simulacao de autorizacao.
-- `stripe`: adaptador preparado. Na Fase 1 fica em estado `pending_provider`, porque a criacao real de PaymentIntent/Subscription precisa de backend e segredo do Stripe fora do navegador.
+Rota: `/master`
 
-### Persistencia
+Controles:
 
-- Fase 1: `localStorage`, para rodar agora sem infraestrutura.
-- Fase 2: API propria + banco relacional.
-- Fase 3: token vault/adquirente real, webhooks, filas e observabilidade.
+- login local;
+- produtos;
+- pedidos;
+- assinaturas;
+- modo do gateway;
+- auditoria;
+- reset do banco local.
 
-### Master Admin
+## Dominio gratis
 
-- Resumo comercial.
-- CRUD de produtos.
-- Historico de pedidos, pagamentos e assinaturas.
-- Configuracao do modo publico: gateway proprio ou Stripe.
-- Politicas do gateway: tokenizacao apenas, sem CVV/PAN persistido.
+O projeto inclui workflow GitHub Pages para publicar no dominio gratuito `github.io`.
 
-## Backend futuro
-
-- API REST/JSON ou tRPC.
-- Banco: PostgreSQL em producao, SQLite apenas para dev/local.
-- Autenticacao: admin com MFA, sessoes seguras, RBAC.
-- Segredos: variaveis de ambiente e cofre, nunca no frontend.
-- Jobs: cobranca recorrente mensal e retentativas controladas.
-- Webhooks: Stripe/adquirente com assinatura e idempotencia.
-
-## Deploy futuro
-
-- Frontend em Vercel/Netlify ou VPS com Nginx.
-- Backend em VPS/Render/Fly/Vercel Functions.
-- Banco gerenciado.
-- HTTPS obrigatorio.
-- Logs sem dados sensiveis.
+Limite importante: GitHub Pages e estatico; ele nao roda o servidor Node/SQLite. A versao publica estatica usa fallback local do navegador quando a API SQL nao existe. Para SQL real publico, usar host Node com disco persistente.
