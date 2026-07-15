@@ -278,13 +278,42 @@ function nextMonthIso(now = new Date()) {
   return next.toISOString();
 }
 
-function getStripeErrorMessage(data, fallback) {
+function getStripeErrorMessage(data, fallback, gatewayMode = "stripe") {
   const message = data?.error?.message || fallback;
   if (/api key|invalid api key|expired api key/i.test(message)) {
-    return "Stripe recusou a chave configurada. Revise STRIPE_SECRET_KEY no ambiente do servidor.";
+    return gatewayMode === "own"
+      ? "Gateway proprio ativo, mas o processador real recusou a credencial configurada. Atualize STRIPE_SECRET_KEY no ambiente do servidor."
+      : "Stripe recusou a chave configurada. Revise STRIPE_SECRET_KEY no ambiente do servidor.";
   }
 
   return message;
+}
+
+function updateProcessorStatusForError(gatewayMode, error) {
+  if (!/STRIPE_SECRET_KEY|api key|credencial configurada/i.test(error || "")) {
+    return;
+  }
+
+  const state = getState();
+  saveState({
+    ...state,
+    gatewaySettings: {
+      ...state.gatewaySettings,
+      own: {
+        ...state.gatewaySettings.own,
+        status: gatewayMode === "own" ? "processor_auth_failed" : state.gatewaySettings.own.status,
+      },
+      stripe: {
+        ...state.gatewaySettings.stripe,
+        status: "invalid_secret_key",
+      },
+    },
+    audit: addAudit(
+      state,
+      gatewayMode === "own" ? "gateway-proprio" : "stripe",
+      "Processador real recusou a credencial de pagamento configurada."
+    ),
+  });
 }
 
 async function createStripeCheckout({
@@ -375,9 +404,14 @@ async function createStripeCheckout({
   const data = await response.json();
 
   if (!response.ok) {
+    const error = getStripeErrorMessage(data, "Stripe recusou a criacao do checkout.", gatewayMode);
+    updateProcessorStatusForError(gatewayMode, error);
     return {
       configured: true,
-      error: getStripeErrorMessage(data, "Stripe recusou a criacao do checkout."),
+      error,
+      code: "processor_auth_failed",
+      gatewayMode,
+      processor: "stripe",
     };
   }
 
@@ -434,9 +468,10 @@ async function retrieveStripeSession(sessionId) {
   const data = await response.json();
 
   if (!response.ok) {
+    const error = getStripeErrorMessage(data, "Nao foi possivel consultar a sessao Stripe.");
     return {
       configured: true,
-      error: getStripeErrorMessage(data, "Nao foi possivel consultar a sessao Stripe."),
+      error,
     };
   }
 

@@ -421,6 +421,12 @@ export default function MasterAdmin() {
               <p className="mt-3 text-sm text-gray-500">
                 Esta vitrine confirma somente cobrancas processadas por adquirente real. O gateway proprio registra token e metadados seguros de cartao no cofre.
               </p>
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                <p><strong>Gateway:</strong> {shop.gatewaySettings.mode === "own" ? "proprio" : "stripe direto"}</p>
+                <p><strong>Processador:</strong> {shop.gatewaySettings.own.processor}</p>
+                <p><strong>Status:</strong> {shop.gatewaySettings.own.status}</p>
+                <p><strong>Stripe:</strong> {shop.gatewaySettings.stripe.status}</p>
+              </div>
             </div>
             <div className="rounded-xl border bg-white p-4 shadow-sm">
               <h2 className="mb-3 text-lg font-black text-gray-900">Auditoria</h2>
