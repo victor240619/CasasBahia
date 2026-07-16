@@ -449,22 +449,22 @@ async function handleApi(request, env, pathname) {
 
   if (pathname === "/api/gateway/checkout" && request.method === "POST") {
     const result = await createStripeCheckout(env, await readJson(request), "payment", "own");
-    return sendJson(result.url ? 200 : 503, result);
+    return sendJson(200, result);
   }
 
   if (pathname === "/api/gateway/subscription" && request.method === "POST") {
     const result = await createStripeCheckout(env, await readJson(request), "subscription", "own");
-    return sendJson(result.url ? 200 : 503, result);
+    return sendJson(200, result);
   }
 
   if (pathname === "/api/stripe/checkout" && request.method === "POST") {
     const result = await createStripeCheckout(env, await readJson(request), "payment", "stripe");
-    return sendJson(result.url ? 200 : 503, result);
+    return sendJson(200, result);
   }
 
   if (pathname === "/api/stripe/subscription" && request.method === "POST") {
     const result = await createStripeCheckout(env, await readJson(request), "subscription", "stripe");
-    return sendJson(result.url ? 200 : 503, result);
+    return sendJson(200, result);
   }
 
   if ((pathname === "/api/stripe/session" || pathname === "/api/gateway/session") && request.method === "GET") {
