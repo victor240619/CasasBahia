@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: casasbahia-store
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.16.0
+      - key: STORE_DB_PATH
+        value: /tmp/casasbahia-store.sqlite
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
