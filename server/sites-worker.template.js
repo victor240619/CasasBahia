@@ -40,6 +40,14 @@ function addAudit(state, actor, action) {
   ];
 }
 
+function configuredGatewayStatus(status, hasStripeSecret) {
+  if (!hasStripeSecret) {
+    return "needs_secret_key";
+  }
+
+  return !status || status === "needs_secret_key" ? "production" : status;
+}
+
 function getState(env = {}) {
   if (!runtimeState) {
     runtimeState = clone(DEFAULT_STATE);
@@ -50,11 +58,11 @@ function getState(env = {}) {
     ...runtimeState.gatewaySettings,
     own: {
       ...runtimeState.gatewaySettings.own,
-      status: hasStripeSecret ? runtimeState.gatewaySettings.own.status : "needs_secret_key",
+      status: configuredGatewayStatus(runtimeState.gatewaySettings.own.status, hasStripeSecret),
     },
     stripe: {
       ...runtimeState.gatewaySettings.stripe,
-      status: hasStripeSecret ? runtimeState.gatewaySettings.stripe.status : "needs_secret_key",
+      status: configuredGatewayStatus(runtimeState.gatewaySettings.stripe.status, hasStripeSecret),
       publishableKey: env.STRIPE_PUBLISHABLE_KEY ? "configured" : "",
     },
   };
@@ -257,6 +265,18 @@ async function createStripeCheckout(env, payload, mode, gatewayMode) {
       : normalizedItems.reduce((sum, item) => sum + item.totalCents, 0);
   saveState({
     ...state,
+    gatewaySettings: {
+      ...state.gatewaySettings,
+      own: {
+        ...state.gatewaySettings.own,
+        status: "production",
+      },
+      stripe: {
+        ...state.gatewaySettings.stripe,
+        status: "production",
+        publishableKey: env.STRIPE_PUBLISHABLE_KEY ? "configured" : state.gatewaySettings.stripe.publishableKey,
+      },
+    },
     stripeSessions: [
       {
         sessionId: data.id,

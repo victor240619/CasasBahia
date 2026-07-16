@@ -418,6 +418,18 @@ async function createStripeCheckout({
   const state = getState();
   saveState({
     ...state,
+    gatewaySettings: {
+      ...state.gatewaySettings,
+      own: {
+        ...state.gatewaySettings.own,
+        status: "production",
+      },
+      stripe: {
+        ...state.gatewaySettings.stripe,
+        status: "production",
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY ? "configured" : state.gatewaySettings.stripe.publishableKey,
+      },
+    },
     stripeSessions: upsertStripeSession(state, {
       sessionId: data.id,
       mode,
